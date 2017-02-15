@@ -11,7 +11,7 @@ public class HeadingFeedbackTest {
     private static final Offset<Double> offset = Offset.offset(0.001);
 
     @Test
-    public void zeroTo90() {
+    public void lessThan90Test() {
         final HeadingFeedback fb = new HeadingFeedback(15);
         assertThat(fb.getError(15)).isEqualTo(0);
         assertThat(fb.getError(10)).isEqualTo(-5);
@@ -29,7 +29,7 @@ public class HeadingFeedbackTest {
     }
 
     @Test
-    public void two70To360() {
+    public void greaterThan270Test() {
         final HeadingFeedback fb = new HeadingFeedback(345);
 
         assertThat(fb.getError(345)).isEqualTo(0);
@@ -48,7 +48,7 @@ public class HeadingFeedbackTest {
     }
 
     @Test
-    public void one80To270() {
+    public void between90And270Test() {
         final HeadingFeedback fb = new HeadingFeedback(180);
 
         assertThat(fb.getError(180)).isEqualTo(0);
