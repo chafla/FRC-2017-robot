@@ -9,6 +9,8 @@ import static org.usfirst.frc.team852.robot.SensorType.*;
 
 public class JvStrategy implements Strategy {
 
+    double initialDegree = -1;
+
     @Override
     public void xboxAButtonPressed(final Robot robot) {
         final CameraGearData cameraGear = robot.getCurrentCameraGear();
@@ -82,27 +84,52 @@ public class JvStrategy implements Strategy {
             return;
         }
 
-        final double dVal = heading.getDegree();
-        final double lowerBound = 1;
-        final double upperBound = 359;
-        final double constant = 0.1;
+        if (initialDegree == -1)
+            initialDegree = heading.getDegree();
+
+
+        final double currentDegree = heading.getDegree();
+        final double error = 0.1;
+        final double pidconstant = 0.1;
+        final double lowerBound = initialDegree - error;
+        final double upperBound = initialDegree + error;
         double turnSpeed;
         String command;
-        if (dVal > 180 && dVal < upperBound) {
-            turnSpeed = (360 - dVal) * constant;
-            if (turnSpeed > 1)
-                turnSpeed = 1;
-            command = "Forwards and clockwise";
-        } else if (dVal < 180 && dVal > lowerBound) {
-            turnSpeed = -(dVal) * constant;
-            if (turnSpeed < -1)
-                turnSpeed = -1;
-            command = "Forwards and counter-clockwise";
-        } else {
-            turnSpeed = 0;
-            command = "Forwards";
-        }
+        double difference = initialDegree - currentDegree;
+        if (Math.abs(difference) > 270) {
+            // deal with overlap
+            if (initialDegree > 180) {
+                // have veered right, turn cc (e.g. initial = 359, current = 1)
+                turnSpeed = difference * pidconstant;
+                if (turnSpeed < -1)
+                    turnSpeed = -1;
+                command = "Forwards and counter-clockwise";
+            } else {
+                // have veered left, turn c (e.g.) initial = 1, current = 359)
+                turnSpeed = difference * pidconstant;
+                if (turnSpeed > 1)
+                    turnSpeed = 1;
+                command = "Forwards and clockwise";
+            }
 
+        } else {
+            if (currentDegree > upperBound) {
+                // have veered right, initial = 120, current = 125
+                turnSpeed = difference * pidconstant;
+                if (turnSpeed < -1)
+                    turnSpeed = -1;
+                command = "Forwards and counter-clockwise";
+            } else if (currentDegree < lowerBound) {
+                // have veered left, initial = 270, current = 260
+                turnSpeed = difference * pidconstant;
+                if (turnSpeed > 1)
+                    turnSpeed = 1;
+                command = "Forwards and clockwise";
+            } else {
+                turnSpeed = 0;
+                command = "Forwards";
+            }
+        }
         robot.drive(0, 0.3, turnSpeed, 0, HEADING, command);
 
 
