@@ -11,15 +11,19 @@ import static org.usfirst.frc.team852.robot.SensorType.*;
 
 public class JvStrategy implements Strategy {
 
-    final AtomicReference<HeadingFeedback> headingFeedbackRef = new AtomicReference<>();
+    private final AtomicReference<HeadingFeedback> headingFeedbackRef = new AtomicReference<>();
+
+    public JvStrategy() {
+        this.reset();
+    }
+
+    private HeadingFeedback getHeadingFeedback() {
+        return headingFeedbackRef.get();
+    }
 
     @Override
     public void reset() {
         this.headingFeedbackRef.set(null);
-    }
-
-    public HeadingFeedback getHeadingFeedback() {
-        return headingFeedbackRef.get();
     }
 
     @Override
