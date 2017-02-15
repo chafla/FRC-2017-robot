@@ -2,10 +2,10 @@ package org.usfirst.frc.team852.robot.strategies;
 
 import org.usfirst.frc.team852.robot.Robot;
 import org.usfirst.frc.team852.robot.data.CameraGearData;
+import org.usfirst.frc.team852.robot.data.HeadingData;
 import org.usfirst.frc.team852.robot.data.LidarData;
 
-import static org.usfirst.frc.team852.robot.SensorType.CAMERA_GEAR;
-import static org.usfirst.frc.team852.robot.SensorType.LIDAR_GEAR;
+import static org.usfirst.frc.team852.robot.SensorType.*;
 
 public class JvStrategy implements Strategy {
 
@@ -66,6 +66,46 @@ public class JvStrategy implements Strategy {
             robot.drive(0, 0, 0.25, 0.1, LIDAR_GEAR, "rotate counter-clockwise");
         else
             robot.logMsg(LIDAR_GEAR, "centered");
+    }
+
+    @Override
+    public void xboxXButtonPressed(final Robot robot) {
+        final HeadingData heading = robot.getCurrentHeading();
+
+        if (heading == null) {
+            System.out.println("Null Object");
+            return;
+        }
+
+        if (heading.getTimestamp() <= robot.getHeadingLastTime()) {
+            System.out.println("Time hasn't updated");
+            return;
+        }
+
+        final double dVal = heading.getDegree();
+        final double lowerBound = 1;
+        final double upperBound = 359;
+        final double constant = 0.1;
+        double turnSpeed;
+        String command;
+        if (dVal > 180 && dVal < upperBound) {
+            turnSpeed = (360 - dVal) * constant;
+            if (turnSpeed > 1)
+                turnSpeed = 1;
+            command = "Forwards and clockwise";
+        } else if (dVal < 180 && dVal > lowerBound) {
+            turnSpeed = -(dVal) * constant;
+            if (turnSpeed < -1)
+                turnSpeed = -1;
+            command = "Forwards and counter-clockwise";
+        } else {
+            turnSpeed = 0;
+            command = "Forwards";
+        }
+
+        robot.drive(0, 0.3, turnSpeed, 0, HEADING, command);
+
+
     }
 
     @Override

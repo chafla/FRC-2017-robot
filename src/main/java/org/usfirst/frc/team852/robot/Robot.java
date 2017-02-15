@@ -15,8 +15,9 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.usfirst.frc.team852.robot.data.CameraGearData;
+import org.usfirst.frc.team852.robot.data.HeadingData;
 import org.usfirst.frc.team852.robot.data.LidarData;
-import org.usfirst.frc.team852.robot.strategies.MattStrategy;
+import org.usfirst.frc.team852.robot.strategies.JvStrategy;
 import org.usfirst.frc.team852.robot.strategies.Strategy;
 
 import java.util.concurrent.ExecutorService;
@@ -34,11 +35,13 @@ public class Robot extends SampleRobot {
     public static final String CAMERA_GEAR_LOGGING_POSITION_TOPIC = "logging/camera/gear/alignment";
     public static final String LIDAR_GEAR_LOGGING_POSITION_TOPIC = "logging/lidar/gear/distance";
     public static final String LIDAR_CLIMBER_LOGGING_POSITION_TOPIC = "logging/lidar/climber/distance";
+    public static final String HEADING_LOGGING_POSITION_TOPIC = "logging/heading/degrees";
     private static final String mqtt_topic = "roborio/keyboard/command";
     private static final String CAMERA_TOPIC = "camera/gear/x";
     private static final String LEFT_LIDAR_TOPIC = "lidar/left/mm";
     private static final String RIGHT_LIDAR_TOPIC = "lidar/right/mm";
     private static final String MQTT_HOSTNAME = "mqtt-turtle.local"; /*"10.8.52.14";*/
+    private static final String HEADING_TOPIC = "heading/degrees";
     private static final int MQTT_PORT = 1883;
     private static final int XBOX_A = 1;
     private static final int XBOX_B = 2;
@@ -84,19 +87,22 @@ public class Robot extends SampleRobot {
     private final AtomicReference<CameraGearData> cameraGearRef = new AtomicReference<>();
     private final AtomicReference<LidarData> leftLidarRef = new AtomicReference<>();
     private final AtomicReference<LidarData> rightLidarRef = new AtomicReference<>();
+    private final AtomicReference<HeadingData> headingRef = new AtomicReference<>();
     private final RobotDrive robotDrive;
     private long cameraLastTime = 0;
     private long lidarLeftLastTime = 0;
     private long lidarRightLastTime = 0;
+    private long headingLastTime = 0;
     private AtomicReference<MqttClient> clientRef = new AtomicReference<>();
     private CameraGearData currentCameraGear = null;
     private LidarData currentLeftLidar = null;
     private LidarData currentRightLidar = null;
+    private HeadingData currentHeading = null;
 
     private final ExecutorService logExecutor = Executors.newFixedThreadPool(4);
     private final ExecutorService mqttExecutor = Executors.newFixedThreadPool(1);
 
-    private final Strategy strategy = new MattStrategy();
+    private final Strategy strategy = new JvStrategy();
 
 	/*
      * Initialize a talon so that speed control will work.
@@ -260,11 +266,14 @@ public class Robot extends SampleRobot {
             this.currentCameraGear = this.cameraGearRef.get();
             this.currentLeftLidar = this.leftLidarRef.get();
             this.currentRightLidar = this.rightLidarRef.get();
+            this.currentHeading = this.headingRef.get();
 
             if (this.xbox.getRawButton(XBOX_A))
                 this.strategy.xboxAButtonPressed(this);
             else if (this.xbox.getRawButton(XBOX_B))
                 this.strategy.xboxBButtonPressed(this);
+            else if (this.xbox.getRawButton(XBOX_X))
+                this.strategy.xboxXButtonPressed(this);
             else if (this.xbox.getRawButton(XBOX_Y))
                 this.strategy.xboxYButtonPressed(this);
 
@@ -323,6 +332,10 @@ public class Robot extends SampleRobot {
         return this.currentRightLidar;
     }
 
+    public HeadingData getCurrentHeading() {
+        return this.currentHeading;
+    }
+
     public long getCameraLastTime() {
         return this.cameraLastTime;
     }
@@ -335,6 +348,10 @@ public class Robot extends SampleRobot {
         return this.lidarRightLastTime;
     }
 
+    public long getHeadingLastTime() {
+        return this.headingLastTime;
+    }
+
     public void updateCameraLastTime() {
         this.cameraLastTime = System.currentTimeMillis();
     }
@@ -345,6 +362,10 @@ public class Robot extends SampleRobot {
 
     public void updateLidarRightLastTime() {
         this.lidarRightLastTime = System.currentTimeMillis();
+    }
+
+    public void updateHeadingLastTime() {
+        this.headingLastTime = System.currentTimeMillis();
     }
 
     public MqttClient getClient() {
@@ -462,6 +483,22 @@ public class Robot extends SampleRobot {
         }
         catch (Exception e) {
             System.out.println("Error in subscribe:" + e.getMessage());
+            e.printStackTrace();
+        }
+
+        // subscribe to heading topic
+        try {
+            client.subscribe(HEADING_TOPIC, (topic, msg) -> {
+                try {
+                    final String cmdmsg = new String(msg.getPayload());
+                    final double degree = Double.parseDouble(cmdmsg);
+                    headingRef.set(new HeadingData(degree));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            });
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
