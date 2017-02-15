@@ -26,6 +26,8 @@ public class HeadingFeedbackTest {
         assertThat(fb.getError(90)).isEqualTo(75);
         assertThat(fb.getError(180)).isEqualTo(165);
         assertThat(fb.getError(190)).isEqualTo(175);
+
+        assertThat(fb.getError(195)).isEqualTo(180);
     }
 
     @Test
@@ -40,11 +42,15 @@ public class HeadingFeedbackTest {
         assertThat(fb.getError(10.9)).isCloseTo(25.9, offset);
         assertThat(fb.getError(15.1)).isCloseTo(30.1, offset);
         assertThat(fb.getError(90)).isEqualTo(105);
+        assertThat(fb.getError(110)).isEqualTo(125);
+
         assertThat(fb.getError(120)).isEqualTo(135);
 
         assertThat(fb.getError(270)).isEqualTo(-75);
         assertThat(fb.getError(180)).isEqualTo(-165);
         assertThat(fb.getError(170)).isEqualTo(-175);
+
+        assertThat(fb.getError(165)).isEqualTo(180);
     }
 
     @Test
@@ -61,4 +67,50 @@ public class HeadingFeedbackTest {
         assertThat(fb.getError(10)).isEqualTo(-170);
         assertThat(fb.getError(350)).isEqualTo(170);
     }
+
+    @Test
+    public void at0() {
+        final HeadingFeedback fb = new HeadingFeedback(0);
+
+        assertThat(fb.getError(0)).isEqualTo(0);
+        assertThat(fb.getError(360)).isEqualTo(0);
+        assertThat(fb.getError(180)).isEqualTo(180);
+        assertThat(fb.getError(10)).isEqualTo(10);
+        assertThat(fb.getError(190)).isEqualTo(-170);
+    }
+
+    @Test
+    public void at90() {
+        final HeadingFeedback fb = new HeadingFeedback(90);
+
+        assertThat(fb.getError(90)).isEqualTo(0);
+        assertThat(fb.getError(180)).isEqualTo(90);
+        assertThat(fb.getError(270)).isEqualTo(180);
+        assertThat(fb.getError(360)).isEqualTo(-90);
+        assertThat(fb.getError(0)).isEqualTo(-90);
+    }
+
+    @Test
+    public void at180() {
+        final HeadingFeedback fb = new HeadingFeedback(180);
+
+        assertThat(fb.getError(180)).isEqualTo(0);
+        assertThat(fb.getError(0)).isEqualTo(180);
+        assertThat(fb.getError(360)).isEqualTo(180);
+        assertThat(fb.getError(10)).isEqualTo(-170);
+        assertThat(fb.getError(-10)).isEqualTo(170);
+    }
+
+    @Test
+    public void at270() {
+        final HeadingFeedback fb = new HeadingFeedback(270);
+
+        assertThat(fb.getError(270)).isEqualTo(0);
+        assertThat(fb.getError(360)).isEqualTo(90);
+        assertThat(fb.getError(0)).isEqualTo(90);
+        assertThat(fb.getError(90)).isEqualTo(180);
+        assertThat(fb.getError(180)).isEqualTo(-90);
+    }
+
+
 }
