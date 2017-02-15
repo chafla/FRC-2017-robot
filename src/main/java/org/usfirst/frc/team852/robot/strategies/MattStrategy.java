@@ -13,6 +13,11 @@ public class MattStrategy implements Strategy {
 
     final private double DEFAULT_DELAY = 0.05;  // Default delay between movement actions
 
+    @Override
+    public void reset() {
+
+    }
+
     public void xboxYButtonPressed(final Robot robot) {
 
         centerWithLidar(robot);

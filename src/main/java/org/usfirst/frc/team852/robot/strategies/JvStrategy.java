@@ -5,23 +5,40 @@ import org.usfirst.frc.team852.robot.data.CameraGearData;
 import org.usfirst.frc.team852.robot.data.HeadingData;
 import org.usfirst.frc.team852.robot.data.LidarData;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import static org.usfirst.frc.team852.robot.SensorType.*;
 
 public class JvStrategy implements Strategy {
 
-    double initialDegree = -1;
+    final AtomicReference<HeadingFeedback> headingFeedbackRef = new AtomicReference<>();
+
+    @Override
+    public void reset() {
+        this.headingFeedbackRef.set(null);
+    }
+
+    public HeadingFeedback getHeadingFeedback() {
+        return headingFeedbackRef.get();
+    }
 
     @Override
     public void xboxAButtonPressed(final Robot robot) {
-        final CameraGearData cameraGear = robot.getCurrentCameraGear();
+        final CameraGearData cameraGearData = robot.getCurrentCameraGear();
 
-        if (cameraGear == null || cameraGear.getTimestamp() <= robot.getCameraLastTime())
+        if (cameraGearData == null) {
+            System.out.println("Null CameraGearData");
             return;
+        }
+        if (cameraGearData.getTimestamp() <= robot.getCameraLastTime()) {
+            System.out.println("Stale CameraGearData");
+            return;
+        } else {
+            robot.updateCameraLastTime();
+        }
 
-        robot.updateCameraLastTime();
-
-        final int xVal = cameraGear.getX();
-        final int wVal = cameraGear.getWidth();
+        final int xVal = cameraGearData.getX();
+        final int wVal = cameraGearData.getWidth();
 
         if (xVal == -1)
             System.out.println("No camera data");
@@ -36,25 +53,26 @@ public class JvStrategy implements Strategy {
     @Override
     public void xboxBButtonPressed(final Robot robot) {
         // v1 of lidar driving
-        final LidarData leftLidar = robot.getCurrentLeftLidar();
-        final LidarData rightLidar = robot.getCurrentRightLidar();
+        final LidarData leftLidarData = robot.getCurrentLeftLidar();
+        final LidarData rightLidarData = robot.getCurrentRightLidar();
 
-        if (leftLidar == null || rightLidar == null) {
-            System.out.println("Null object");
+        if (leftLidarData == null || rightLidarData == null) {
+            System.out.println("Null LidarData");
             return;
         }
 
-        if (leftLidar.getTimestamp() <= robot.getLidarLeftLastTime()
-                || rightLidar.getTimestamp() <= robot.getLidarRightLastTime()) {
-            System.out.println("Time hasn't updated");
+        if (leftLidarData.getTimestamp() <= robot.getLidarLeftLastTime()
+                || rightLidarData.getTimestamp() <= robot.getLidarRightLastTime()) {
+            System.out.println("Stale LidarData");
             return;
+        } else {
+            robot.updateLidarLeftLastTime();
+            robot.updateLidarRightLastTime();
         }
 
-        final int lVal = leftLidar.getMm();
-        final int rVal = rightLidar.getMm();
+        final int lVal = leftLidarData.getMm();
+        final int rVal = rightLidarData.getMm();
 
-        robot.updateLidarLeftLastTime();
-        robot.updateLidarRightLastTime();
 
         if (lVal == -1 || rVal == -1)
             System.out.println("Out of range");
@@ -70,89 +88,76 @@ public class JvStrategy implements Strategy {
             robot.logMsg(LIDAR_GEAR, "centered");
     }
 
+    private static final double THRESHHOLD_DEGREES = 1.5;
+    private static final double PID_CORRECTION = 0.1;
+
     @Override
     public void xboxXButtonPressed(final Robot robot) {
-        final HeadingData heading = robot.getCurrentHeading();
+        final HeadingData headingData = robot.getCurrentHeading();
 
-        if (heading == null) {
-            System.out.println("Null Object");
+        if (headingData == null) {
+            System.out.println("Null HeadingData");
             return;
         }
 
-        if (heading.getTimestamp() <= robot.getHeadingLastTime()) {
-            System.out.println("Time hasn't updated");
+        if (headingData.getTimestamp() <= robot.getHeadingLastTime()) {
+            System.out.println("Stale HeadingData");
             return;
-        }
-
-        if (initialDegree == -1)
-            initialDegree = heading.getDegree();
-
-
-        final double currentDegree = heading.getDegree();
-        final double error = 0.1;
-        final double pidconstant = 0.1;
-        final double lowerBound = initialDegree - error;
-        final double upperBound = initialDegree + error;
-        double turnSpeed;
-        String command;
-        double difference = initialDegree - currentDegree;
-        if (Math.abs(difference) > 270) {
-            // deal with overlap
-            if (initialDegree > 180) {
-                // have veered right, turn cc (e.g. initial = 359, current = 1)
-                turnSpeed = difference * pidconstant;
-                if (turnSpeed < -1)
-                    turnSpeed = -1;
-                command = "Forwards and counter-clockwise";
-            } else {
-                // have veered left, turn c (e.g.) initial = 1, current = 359)
-                turnSpeed = difference * pidconstant;
-                if (turnSpeed > 1)
-                    turnSpeed = 1;
-                command = "Forwards and clockwise";
-            }
-
         } else {
-            if (currentDegree > upperBound) {
-                // have veered right, initial = 120, current = 125
-                turnSpeed = difference * pidconstant;
-                if (turnSpeed < -1)
-                    turnSpeed = -1;
-                command = "Forwards and counter-clockwise";
-            } else if (currentDegree < lowerBound) {
-                // have veered left, initial = 270, current = 260
-                turnSpeed = difference * pidconstant;
-                if (turnSpeed > 1)
-                    turnSpeed = 1;
-                command = "Forwards and clockwise";
-            } else {
-                turnSpeed = 0;
-                command = "Forwards";
-            }
+            robot.updateHeadingLastTime();
         }
+
+        final double degrees = headingData.getDegree();
+
+        // This will be set the first time through
+        if (this.getHeadingFeedback() == null)
+            this.headingFeedbackRef.set(new HeadingFeedback(degrees));
+
+        final double errorDegrees = this.getHeadingFeedback().getError(degrees);
+
+        final double turnSpeed;
+        final String command;
+        if (errorDegrees > THRESHHOLD_DEGREES) {
+            // veered right, turn left
+            turnSpeed = Math.max(errorDegrees * PID_CORRECTION, -1);
+            command = "Forward and counter-clockwise";
+
+        } else if (errorDegrees < (THRESHHOLD_DEGREES * -1)) {
+            // veered left, turn right
+            turnSpeed = Math.min(errorDegrees * PID_CORRECTION, 1);
+            command = "Forward and clockwise";
+        } else {
+            // On course, drive straight.
+            turnSpeed = 0;
+            command = "Forward";
+        }
+
         robot.drive(0, 0.3, turnSpeed, 0, HEADING, command);
-
-
     }
 
     @Override
     public void xboxYButtonPressed(final Robot robot) {
         // v2 of lidar driving
-        final LidarData leftMsg = robot.getCurrentLeftLidar();
-        final LidarData rightMsg = robot.getCurrentRightLidar();
+        final LidarData leftLidarData = robot.getCurrentLeftLidar();
+        final LidarData rightLidarData = robot.getCurrentRightLidar();
 
-        if (leftMsg == null || rightMsg == null
-                || leftMsg.getTimestamp() <= robot.getLidarLeftLastTime()
-                || rightMsg.getTimestamp() <= robot.getLidarRightLastTime())
+        if (leftLidarData == null || rightLidarData == null) {
+            System.out.println("Null LidarData");
             return;
+        }
+        if (leftLidarData.getTimestamp() <= robot.getLidarLeftLastTime()
+                || rightLidarData.getTimestamp() <= robot.getLidarRightLastTime()) {
+            System.out.println("Stale LidarData");
+            return;
+        } else {
+            robot.updateLidarLeftLastTime();
+            robot.updateLidarRightLastTime();
+        }
 
-        final int lVal = leftMsg.getMm();
-        final int rVal = rightMsg.getMm();
+        final int lVal = leftLidarData.getMm();
+        final int rVal = rightLidarData.getMm();
 
-        robot.updateLidarLeftLastTime();
-        robot.updateLidarRightLastTime();
-
-        if (leftMsg.getMm() == -1 || rightMsg.getMm() == -1) {
+        if (leftLidarData.getMm() == -1 || rightLidarData.getMm() == -1) {
             System.out.println("Out of range");
         } else if (lVal > rVal + 10) {
             if (lVal > 320 && rVal > 320)

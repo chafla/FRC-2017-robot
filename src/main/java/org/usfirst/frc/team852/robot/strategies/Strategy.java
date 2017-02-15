@@ -4,6 +4,8 @@ import org.usfirst.frc.team852.robot.Robot;
 
 public interface Strategy {
 
+    void reset();
+    
     void xboxAButtonPressed(Robot robot);
 
     void xboxBButtonPressed(Robot robot);
