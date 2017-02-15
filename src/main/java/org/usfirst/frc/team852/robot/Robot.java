@@ -74,10 +74,10 @@ public class Robot extends SampleRobot {
         }
     };
     // Drives practice robot with battery at FRONT
-    private final CANTalon frontLeft = new CANTalon(0);
-    private final CANTalon frontRight = new CANTalon(4);
-    private final CANTalon rearLeft = new CANTalon(3);
-    private final CANTalon rearRight = new CANTalon(7);
+    private final CANTalon frontLeft = new CANTalon(4);
+    private final CANTalon frontRight = new CANTalon(7);
+    private final CANTalon rearLeft = new CANTalon(0);
+    private final CANTalon rearRight = new CANTalon(3);
     private final Joystick stick1 = new Joystick(0);
     private final Joystick stick2 = new Joystick(1);
     private final Joystick xbox = new Joystick(2);
@@ -115,8 +115,8 @@ public class Robot extends SampleRobot {
         // reversed we switch them here. May need to use the right side
         // instead, but left side works with practice chassis.
 
-        this.robotDrive.setInvertedMotor(MotorType.kFrontLeft, true);
-        this.robotDrive.setInvertedMotor(MotorType.kRearLeft, true);
+        this.robotDrive.setInvertedMotor(MotorType.kFrontRight, true);
+        this.robotDrive.setInvertedMotor(MotorType.kRearRight, true);
 
         //robotDrive.setExpiration(0.1);
         // If robotDrive.something isn't called every 0.1 second we are hosed. Set timeout to 600 seconds.
@@ -126,7 +126,6 @@ public class Robot extends SampleRobot {
         this.robotDrive.setExpiration(600.0);
 
         // Set normal drive mode (don't use velocity PID)
-        this.setAllTalonsSpeedMode(false);
 
         // Create the mqtt client and subscribe to messages from the broker.
         // We modified createMqttClient in org.athenian.Utils.java so that it
@@ -169,19 +168,6 @@ public class Robot extends SampleRobot {
         talon.setP(2.25);
         talon.setI(.005);
         talon.setD(25.0);
-    }
-
-    private void setAllTalonsSpeedMode(final boolean useSpeedMode) {
-        // max rpm is around 400, max is +/- 1.0
-        this.robotDrive.setMaxOutput(useSpeedMode ? 400.0 : 1.0);
-        this.setTalonSpeedMode(this.frontRight, useSpeedMode);
-        this.setTalonSpeedMode(this.frontLeft, useSpeedMode);
-        this.setTalonSpeedMode(this.rearRight, useSpeedMode);
-        this.setTalonSpeedMode(this.rearLeft, useSpeedMode);
-    }
-
-    private void setTalonSpeedMode(CANTalon talon, boolean useSpeedMode) {
-        talon.changeControlMode(useSpeedMode ? TalonControlMode.Speed : TalonControlMode.PercentVbus);
     }
 
     /*
@@ -250,7 +236,6 @@ public class Robot extends SampleRobot {
          * For speed mode (true), sets talon control mode to Speed and max output to 400 RPM.
 		 * For normal mode (false), sets talon control mode to %vbus and max output to 1.0.
 		 */
-        this.setAllTalonsSpeedMode(false);
 
         boolean s2button1 = false;
         boolean speedMode = false;
@@ -268,20 +253,6 @@ public class Robot extends SampleRobot {
             this.currentCameraGear = this.cameraGearRef.get();
             this.currentLeftLidar = this.leftLidarRef.get();
             this.currentRightLidar = this.rightLidarRef.get();
-
-            /*
-            if (this.stick2.getRawButton(1)) {
-                s2button1 = true;
-            } else if (s2button1) {
-                s2button1 = false;
-                speedMode = !speedMode;
-                System.out.println("Setting speed mode " + (speedMode ? "TRUE" : "FALSE"));
-                this.setAllTalonsSpeedMode(speedMode);
-
-                // Don't do any more processing - restart loop
-                continue;
-            }
-            */
 
             if (this.xbox.getRawButton(XBOX_A))
                 this.strategy.xboxAButtonPressed(this);
@@ -306,13 +277,13 @@ public class Robot extends SampleRobot {
             // Velocity drive needs a larger deadzone, and we can't extend Joystick.
             if (this.stick1.getZ() < 0)
                 this.robotDrive.mecanumDrive_Cartesian(this.adjustDeadzone(this.stick1.getX()),
-                                                       this.adjustDeadzone(this.stick1.getY()),
+                        -this.adjustDeadzone(this.stick1.getY()),
                                                        this.adjustDeadzone(this.stick2.getX()),
                                                        0);
             else
                 this.robotDrive.mecanumDrive_Cartesian((this.adjustDeadzone(this.stick1.getX()) + this.adjustDeadzone(this.stick2.getX())) / 2,
                                                        (this.adjustDeadzone(stick1.getY()) + this.adjustDeadzone(this.stick2.getY())) / 2,
-                                                       (this.adjustDeadzone(this.stick1.getY()) - this.adjustDeadzone(this.stick2.getY())) / 2, 0);
+                        (this.adjustDeadzone(this.stick2.getY()) - this.adjustDeadzone(this.stick1.getY())) / 2, 0);
             /*
             double x1 = stick1.getX();
             double y1 = stick1.getY();
