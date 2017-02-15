@@ -119,11 +119,13 @@ public class JvStrategy implements Strategy {
         final String command;
         if (errorDegrees > THRESHHOLD_DEGREES) {
             // veered right, turn left
+            // turnSpeed will be no less than -1
             turnSpeed = Math.max(errorDegrees * PID_CORRECTION, -1);
             command = "Forward and counter-clockwise";
 
         } else if (errorDegrees < (THRESHHOLD_DEGREES * -1)) {
             // veered left, turn right
+            // turnSpeed will be no more 1
             turnSpeed = Math.min(errorDegrees * PID_CORRECTION, 1);
             command = "Forward and clockwise";
         } else {
