@@ -89,12 +89,13 @@ public class Robot extends SampleRobot {
     private long cameraLastTime = 0;
     private long lidarLeftLastTime = 0;
     private long lidarRightLastTime = 0;
-    private MqttClient client;
+    private AtomicReference<MqttClient> clientRef = new AtomicReference<>();
     private CameraGearData currentCameraGear = null;
     private LidarData currentLeftLidar = null;
     private LidarData currentRightLidar = null;
 
     private final ExecutorService logExecutor = Executors.newFixedThreadPool(4);
+    private final ExecutorService mqttExecutor = Executors.newFixedThreadPool(1);
 
 	/*
      * Initialize a talon so that speed control will work.
@@ -127,18 +128,26 @@ public class Robot extends SampleRobot {
 
         // Set normal drive mode (don't use velocity PID)
 
-        // Create the mqtt client and subscribe to messages from the broker.
-        // We modified createMqttClient in org.athenian.Utils.java so that it
-        // sets the option to automatically reconnect if the connection fails!
-        while (true) {
-            this.client = Utils.createMqttClient(MQTT_HOSTNAME, MQTT_PORT, new BaseMqttCallback());
-            if (this.client != null)
-                break;
-            System.out.println("MqttClient: Error connecting to server");
-            Thread.sleep(1000);
-        }
+        this.mqttExecutor.submit(new Runnable() {
+            @Override
+            public void run() {
+                // Create the mqtt client and subscribe to messages from the broker.
+                // We modified createMqttClient in org.athenian.Utils.java so that it
+                // sets the option to automatically reconnect if the connection fails!
+                while (true) {
+                    final MqttClient client = Utils.createMqttClient(MQTT_HOSTNAME, MQTT_PORT, new BaseMqttCallback());
+                    if (client != null) {
+                        clientRef.set(client);
+                        break;
+                    }
+                    System.out.println("MqttClient: Error connecting to server");
+                    Utils.sleepSecs(1);
+                }
 
-        this.subscribeToTopics();
+                subscribeToTopics(getClient());
+
+            }
+        });
     }
 
     private void initAllTalons() {
@@ -340,6 +349,10 @@ public class Robot extends SampleRobot {
         this.lidarRightLastTime = System.currentTimeMillis();
     }
 
+    public MqttClient getClient() {
+        return this.clientRef.get();
+    }
+
     public void drive(final double x,
                       final double y,
                       final double rot,
@@ -357,7 +370,9 @@ public class Robot extends SampleRobot {
                 () -> {
                     try {
                         final String msg = sensorType.getMsgGenerator().getMesssage(Robot.this, desc);
-                        Robot.this.client.publish(sensorType.getTopic(), new MqttMessage(msg.getBytes()));
+                        final MqttClient client = this.getClient();
+                        if (client != null)
+                            client.publish(sensorType.getTopic(), new MqttMessage(msg.getBytes()));
                     }
                     catch (MqttException e1) {
                         e1.printStackTrace();
@@ -367,18 +382,21 @@ public class Robot extends SampleRobot {
 
     public void logMsg2(final SensorType sensorType, final String logMsg) {
         try {
+            final MqttClient client = this.getClient();
+            if (client == null)
+                return;
             switch (sensorType) {
                 case CAMERA_GEAR:
-                    this.client.publish(sensorType.getTopic(),
-                                        new MqttMessage(String.format("%d - %s",
-                                                                      this.getCurrentCameraGear().getX(),
-                                                                      logMsg).getBytes()));
+                    client.publish(sensorType.getTopic(),
+                                   new MqttMessage(String.format("%d - %s",
+                                                                 this.getCurrentCameraGear().getX(),
+                                                                 logMsg).getBytes()));
                 case LIDAR_GEAR:
-                    this.client.publish(sensorType.getTopic(),
-                                        new MqttMessage(String.format("L %d R %d - %s",
-                                                                      this.getCurrentLeftLidar().getMm(),
-                                                                      this.getCurrentRightLidar().getMm(),
-                                                                      logMsg).getBytes()));
+                    client.publish(sensorType.getTopic(),
+                                   new MqttMessage(String.format("L %d R %d - %s",
+                                                                 this.getCurrentLeftLidar().getMm(),
+                                                                 this.getCurrentRightLidar().getMm(),
+                                                                 logMsg).getBytes()));
             }
         }
         catch (MqttException e1) {
@@ -395,7 +413,7 @@ public class Robot extends SampleRobot {
         return isEnabled() && isOperatorControl();
     }
 
-    private void subscribeToTopics() {
+    private void subscribeToTopics(final MqttClient client) {
 
         System.out.println("Subscribing to topics");
 
@@ -455,8 +473,8 @@ public class Robot extends SampleRobot {
 
         // subscribe to right lidar topic
         try {
-            this.client.subscribe(RIGHT_LIDAR_TOPIC,
-                                  (topic, msg) -> {
+            client.subscribe(RIGHT_LIDAR_TOPIC,
+                             (topic, msg) -> {
                                       try {
                                           final String cmdmsg = new String(msg.getPayload());
                                           final int dist = Integer.parseInt(cmdmsg);

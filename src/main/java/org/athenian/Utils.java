@@ -16,6 +16,15 @@ public class Utils {
         return s.contains(":") ? Integer.parseInt(s.substring(s.indexOf(":") + 1, s.length())) : 1883;
     }
 
+    public static void sleepSecs(final long secs) {
+        try {
+            Thread.sleep(secs * 1000);
+        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static MqttClient createMqttClient(final String mqtt_hostname, final int mqtt_port, MqttCallback callback) {
 
         try {
