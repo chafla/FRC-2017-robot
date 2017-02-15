@@ -84,7 +84,6 @@ public class Robot extends SampleRobot {
     private final AtomicReference<CameraGearData> cameraGearRef = new AtomicReference<>();
     private final AtomicReference<LidarData> leftLidarRef = new AtomicReference<>();
     private final AtomicReference<LidarData> rightLidarRef = new AtomicReference<>();
-    private final Strategy strategy = new MattStrategy();
     private final RobotDrive robotDrive;
     private long cameraLastTime = 0;
     private long lidarLeftLastTime = 0;
@@ -96,6 +95,8 @@ public class Robot extends SampleRobot {
 
     private final ExecutorService logExecutor = Executors.newFixedThreadPool(4);
     private final ExecutorService mqttExecutor = Executors.newFixedThreadPool(1);
+
+    private final Strategy strategy = new MattStrategy();
 
 	/*
      * Initialize a talon so that speed control will work.
@@ -283,13 +284,13 @@ public class Robot extends SampleRobot {
             // Velocity drive needs a larger deadzone, and we can't extend Joystick.
             if (this.stick1.getZ() < 0)
                 this.robotDrive.mecanumDrive_Cartesian(this.adjustDeadzone(this.stick1.getX()),
-                        -this.adjustDeadzone(this.stick1.getY()),
+                                                       -this.adjustDeadzone(this.stick1.getY()),
                                                        this.adjustDeadzone(this.stick2.getX()),
                                                        0);
             else
                 this.robotDrive.mecanumDrive_Cartesian((this.adjustDeadzone(this.stick1.getX()) + this.adjustDeadzone(this.stick2.getX())) / 2,
                                                        (this.adjustDeadzone(stick1.getY()) + this.adjustDeadzone(this.stick2.getY())) / 2,
-                        (this.adjustDeadzone(this.stick2.getY()) - this.adjustDeadzone(this.stick1.getY())) / 2, 0);
+                                                       (this.adjustDeadzone(this.stick2.getY()) - this.adjustDeadzone(this.stick1.getY())) / 2, 0);
             /*
             double x1 = stick1.getX();
             double y1 = stick1.getY();
@@ -377,30 +378,6 @@ public class Robot extends SampleRobot {
                 });
     }
 
-    public void logMsg2(final SensorType sensorType, final String logMsg) {
-        try {
-            final MqttClient client = this.getClient();
-            if (client == null)
-                return;
-            switch (sensorType) {
-                case CAMERA_GEAR:
-                    client.publish(sensorType.getTopic(),
-                                   new MqttMessage(String.format("%d - %s",
-                                                                 this.getCurrentCameraGear().getX(),
-                                                                 logMsg).getBytes()));
-                case LIDAR_GEAR:
-                    client.publish(sensorType.getTopic(),
-                                   new MqttMessage(String.format("L %d R %d - %s",
-                                                                 this.getCurrentLeftLidar().getMm(),
-                                                                 this.getCurrentRightLidar().getMm(),
-                                                                 logMsg).getBytes()));
-            }
-        }
-        catch (MqttException e1) {
-            e1.printStackTrace();
-        }
-    }
-
     // May want multiple listeners, one per topic - or one listener
     // which gets all topics. Not sure which at this point.
 
@@ -472,16 +449,16 @@ public class Robot extends SampleRobot {
         try {
             client.subscribe(RIGHT_LIDAR_TOPIC,
                              (topic, msg) -> {
-                                      try {
-                                          final String cmdmsg = new String(msg.getPayload());
-                                          final int dist = Integer.parseInt(cmdmsg);
-                                          rightLidarRef.set(new LidarData(dist));
-                                      }
-                                      catch (Exception e) {
-                                          System.out.println("Error in subscribe:" + e.getMessage());
-                                          e.printStackTrace();
-                                      }
-                                  });
+                                 try {
+                                     final String cmdmsg = new String(msg.getPayload());
+                                     final int dist = Integer.parseInt(cmdmsg);
+                                     rightLidarRef.set(new LidarData(dist));
+                                 }
+                                 catch (Exception e) {
+                                     System.out.println("Error in subscribe:" + e.getMessage());
+                                     e.printStackTrace();
+                                 }
+                             });
         }
         catch (Exception e) {
             System.out.println("Error in subscribe:" + e.getMessage());
