@@ -128,25 +128,22 @@ public class Robot extends SampleRobot {
 
         // Set normal drive mode (don't use velocity PID)
 
-        this.mqttExecutor.submit(new Runnable() {
-            @Override
-            public void run() {
-                // Create the mqtt client and subscribe to messages from the broker.
-                // We modified createMqttClient in org.athenian.Utils.java so that it
-                // sets the option to automatically reconnect if the connection fails!
-                while (true) {
-                    final MqttClient client = Utils.createMqttClient(MQTT_HOSTNAME, MQTT_PORT, new BaseMqttCallback());
-                    if (client != null) {
-                        clientRef.set(client);
-                        break;
-                    }
-                    System.out.println("MqttClient: Error connecting to server");
-                    Utils.sleepSecs(1);
+        this.mqttExecutor.submit(() -> {
+            // Create the mqtt client and subscribe to messages from the broker.
+            // We modified createMqttClient in org.athenian.Utils.java so that it
+            // sets the option to automatically reconnect if the connection fails!
+            while (true) {
+                final MqttClient client = Utils.createMqttClient(MQTT_HOSTNAME, MQTT_PORT, new BaseMqttCallback());
+                if (client != null) {
+                    clientRef.set(client);
+                    break;
                 }
-
-                subscribeToTopics(getClient());
-
+                System.out.println("MqttClient: Error connecting to server");
+                Utils.sleepSecs(1);
             }
+
+            subscribeToTopics(getClient());
+
         });
     }
 
