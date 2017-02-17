@@ -3,7 +3,7 @@ package org.usfirst.frc.team852.robot.strategy;
 import org.usfirst.frc.team852.robot.Robot;
 import org.usfirst.frc.team852.robot.data.CameraData;
 import org.usfirst.frc.team852.robot.data.HeadingData;
-import org.usfirst.frc.team852.robot.data.ShortLidarData;
+import org.usfirst.frc.team852.robot.data.LidarData;
 import org.usfirst.frc.team852.robot.navigation.HeadingFeedback;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -58,25 +58,25 @@ public class JvStrategy implements Strategy {
     @Override
     public void xboxBButtonPressed(final Robot robot) {
         // v1 of lidar driving
-        final ShortLidarData leftLidarData = robot.getCurrentLeftLidar();
-        final ShortLidarData rightLidarData = robot.getCurrentRightLidar();
+        final LidarData leftLidarData = robot.getCurrentLeftLidar();
+        final LidarData rightLidarData = robot.getCurrentRightLidar();
 
         if (leftLidarData == null || rightLidarData == null) {
-            System.out.println("Null ShortLidarData");
+            System.out.println("Null Short LidarData");
             return;
         }
 
         if (leftLidarData.getTimestamp() <= robot.getLidarLeftLastTime()
                 || rightLidarData.getTimestamp() <= robot.getLidarRightLastTime()) {
-            System.out.println("Stale ShortLidarData");
+            System.out.println("Stale Short LidarData");
             return;
         } else {
             robot.updateLidarLeftLastTime();
             robot.updateLidarRightLastTime();
         }
 
-        final int lVal = leftLidarData.getMm();
-        final int rVal = rightLidarData.getMm();
+        final int lVal = leftLidarData.getVal();
+        final int rVal = rightLidarData.getVal();
 
 
         if (lVal == -1 || rVal == -1)
@@ -123,14 +123,12 @@ public class JvStrategy implements Strategy {
         final double turnSpeed;
         final String command;
         if (errorDegrees > THRESHHOLD_DEGREES) {
-            // veered right, turn left
-            // turnSpeed will be no less than -1
+            // veered right, turn left, turnSpeed will be no less than -1
             turnSpeed = Math.max(errorDegrees * PID_CORRECTION, -1);
             command = "Forward and counter-clockwise";
 
         } else if (errorDegrees < (THRESHHOLD_DEGREES * -1)) {
-            // veered left, turn right
-            // turnSpeed will be no more 1
+            // veered left, turn right, turnSpeed will be no more 1
             turnSpeed = Math.min(errorDegrees * PID_CORRECTION, 1);
             command = "Forward and clockwise";
         } else {
@@ -145,26 +143,26 @@ public class JvStrategy implements Strategy {
     @Override
     public void xboxYButtonPressed(final Robot robot) {
         // v2 of lidar driving
-        final ShortLidarData leftLidarData = robot.getCurrentLeftLidar();
-        final ShortLidarData rightLidarData = robot.getCurrentRightLidar();
+        final LidarData leftLidarData = robot.getCurrentLeftLidar();
+        final LidarData rightLidarData = robot.getCurrentRightLidar();
 
         if (leftLidarData == null || rightLidarData == null) {
-            System.out.println("Null ShortLidarData");
+            System.out.println("Null Short LidarData");
             return;
         }
         if (leftLidarData.getTimestamp() <= robot.getLidarLeftLastTime()
                 || rightLidarData.getTimestamp() <= robot.getLidarRightLastTime()) {
-            System.out.println("Stale ShortLidarData");
+            System.out.println("Stale Short LidarData");
             return;
         } else {
             robot.updateLidarLeftLastTime();
             robot.updateLidarRightLastTime();
         }
 
-        final int lVal = leftLidarData.getMm();
-        final int rVal = rightLidarData.getMm();
+        final int lVal = leftLidarData.getVal();
+        final int rVal = rightLidarData.getVal();
 
-        if (leftLidarData.getMm() == -1 || rightLidarData.getMm() == -1) {
+        if (leftLidarData.getVal() == -1 || rightLidarData.getVal() == -1) {
             System.out.println("Out of range");
         } else if (lVal > rVal + 10) {
             if (lVal > 320 && rVal > 320)

@@ -10,16 +10,16 @@ public enum SensorType {
     LIDAR_GEAR(Constants.LIDAR_GEAR_LOGGING_POSITION_TOPIC,
                (robot, logMsg) ->
                        String.format("Left: %dmm Right: %dmm - %s",
-                                     robot.getCurrentLeftLidar().getMm(),
-                                     robot.getCurrentRightLidar().getMm(),
+                                     robot.getCurrentLeftLidar().getVal(),
+                                     robot.getCurrentRightLidar().getVal(),
                                      logMsg)),
 
     HEADING(Constants.HEADING_LOGGING_POSITION_TOPIC,
             (robot, logMsg) ->
                     String.format("Heading: %f Front: %dcm Rear: %dcm - %s",
                                   robot.getCurrentHeading().getDegree(),
-                                  robot.getCurrentFrontLidar().getCm(),
-                                  robot.getCurrentRearLidar().getCm(),
+                                  robot.getCurrentFrontLidar().getVal(),
+                                  robot.getCurrentRearLidar().getVal(),
                                   logMsg)
     );
 

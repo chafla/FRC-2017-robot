@@ -119,6 +119,4 @@ public class HeadingFeedbackTest {
         assertThat(fb.getError(180.1)).isCloseTo(-89.9, offset);
         assertThat(fb.getError(179.9)).isCloseTo(-90.1, offset);
     }
-
-
 }

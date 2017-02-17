@@ -16,8 +16,7 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.usfirst.frc.team852.robot.data.CameraData;
 import org.usfirst.frc.team852.robot.data.HeadingData;
-import org.usfirst.frc.team852.robot.data.LongLidarData;
-import org.usfirst.frc.team852.robot.data.ShortLidarData;
+import org.usfirst.frc.team852.robot.data.LidarData;
 import org.usfirst.frc.team852.robot.strategy.JvStrategy;
 import org.usfirst.frc.team852.robot.strategy.Strategy;
 
@@ -75,10 +74,10 @@ public class Robot extends SampleRobot {
     private final Joystick stick2 = new Joystick(1);
     private final Joystick xbox = new Joystick(2);
     private final AtomicReference<CameraData> cameraGearRef = new AtomicReference<>();
-    private final AtomicReference<LongLidarData> frontLidarRef = new AtomicReference<>();
-    private final AtomicReference<LongLidarData> rearLidarRef = new AtomicReference<>();
-    private final AtomicReference<ShortLidarData> leftLidarRef = new AtomicReference<>();
-    private final AtomicReference<ShortLidarData> rightLidarRef = new AtomicReference<>();
+    private final AtomicReference<LidarData> frontLidarRef = new AtomicReference<>();
+    private final AtomicReference<LidarData> rearLidarRef = new AtomicReference<>();
+    private final AtomicReference<LidarData> leftLidarRef = new AtomicReference<>();
+    private final AtomicReference<LidarData> rightLidarRef = new AtomicReference<>();
     private final AtomicReference<HeadingData> headingRef = new AtomicReference<>();
     private final RobotDrive robotDrive;
     private final ExecutorService logExecutor = Executors.newFixedThreadPool(4);
@@ -92,10 +91,10 @@ public class Robot extends SampleRobot {
     private long headingLastTime = 0;
     private AtomicReference<MqttClient> clientRef = new AtomicReference<>();
     private CameraData currentCameraGear = null;
-    private LongLidarData currentFrontLidar = null;
-    private LongLidarData currentRearLidar = null;
-    private ShortLidarData currentLeftLidar = null;
-    private ShortLidarData currentRightLidar = null;
+    private LidarData currentFrontLidar = null;
+    private LidarData currentRearLidar = null;
+    private LidarData currentLeftLidar = null;
+    private LidarData currentRightLidar = null;
     private HeadingData currentHeading = null;
 
 	/*
@@ -320,19 +319,19 @@ public class Robot extends SampleRobot {
         return this.currentCameraGear;
     }
 
-    public LongLidarData getCurrentFrontLidar() {
+    public LidarData getCurrentFrontLidar() {
         return this.currentFrontLidar;
     }
 
-    public LongLidarData getCurrentRearLidar() {
+    public LidarData getCurrentRearLidar() {
         return this.currentRearLidar;
     }
 
-    public ShortLidarData getCurrentLeftLidar() {
+    public LidarData getCurrentLeftLidar() {
         return this.currentLeftLidar;
     }
 
-    public ShortLidarData getCurrentRightLidar() {
+    public LidarData getCurrentRightLidar() {
         return this.currentRightLidar;
     }
 
@@ -441,25 +440,25 @@ public class Robot extends SampleRobot {
             client.subscribe(Constants.FRONT_LIDAR_TOPIC,
                              (topic, msg) -> {
                                  final int dist = Integer.parseInt(new String(msg.getPayload()));
-                                 frontLidarRef.set(new LongLidarData(dist));
+                                 frontLidarRef.set(new LidarData(dist));
                              });
 
             client.subscribe(Constants.REAR_LIDAR_TOPIC,
                              (topic, msg) -> {
                                  final int dist = Integer.parseInt(new String(msg.getPayload()));
-                                 rearLidarRef.set(new LongLidarData(dist));
+                                 rearLidarRef.set(new LidarData(dist));
                              });
 
             client.subscribe(Constants.LEFT_LIDAR_TOPIC,
                              (topic, msg) -> {
                                  final int dist = Integer.parseInt(new String(msg.getPayload()));
-                                 leftLidarRef.set(new ShortLidarData(dist));
+                                 leftLidarRef.set(new LidarData(dist));
                              });
 
             client.subscribe(Constants.RIGHT_LIDAR_TOPIC,
                              (topic, msg) -> {
                                  final int dist = Integer.parseInt(new String(msg.getPayload()));
-                                 rightLidarRef.set(new ShortLidarData(dist));
+                                 rightLidarRef.set(new LidarData(dist));
                              });
 
             client.subscribe(Constants.HEADING_TOPIC,
