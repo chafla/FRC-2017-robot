@@ -1,7 +1,7 @@
 package org.usfirst.frc.team852.robot.strategies;
 
 import org.usfirst.frc.team852.robot.Robot;
-import org.usfirst.frc.team852.robot.data.CameraGearData;
+import org.usfirst.frc.team852.robot.data.CameraData;
 import org.usfirst.frc.team852.robot.data.HeadingData;
 import org.usfirst.frc.team852.robot.data.ShortLidarData;
 
@@ -28,21 +28,21 @@ public class JvStrategy implements Strategy {
 
     @Override
     public void xboxAButtonPressed(final Robot robot) {
-        final CameraGearData cameraGearData = robot.getCurrentCameraGear();
+        final CameraData cameraData = robot.getCurrentCameraGear();
 
-        if (cameraGearData == null) {
-            System.out.println("Null CameraGearData");
+        if (cameraData == null) {
+            System.out.println("Null CameraData");
             return;
         }
-        if (cameraGearData.getTimestamp() <= robot.getCameraLastTime()) {
-            System.out.println("Stale CameraGearData");
+        if (cameraData.getTimestamp() <= robot.getCameraLastTime()) {
+            System.out.println("Stale CameraData");
             return;
         } else {
             robot.updateCameraLastTime();
         }
 
-        final int xVal = cameraGearData.getX();
-        final int wVal = cameraGearData.getWidth();
+        final int xVal = cameraData.getX();
+        final int wVal = cameraData.getWidth();
 
         if (xVal == -1)
             System.out.println("No camera data");

@@ -14,7 +14,7 @@ import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.usfirst.frc.team852.robot.data.CameraGearData;
+import org.usfirst.frc.team852.robot.data.CameraData;
 import org.usfirst.frc.team852.robot.data.HeadingData;
 import org.usfirst.frc.team852.robot.data.LongLidarData;
 import org.usfirst.frc.team852.robot.data.ShortLidarData;
@@ -74,7 +74,7 @@ public class Robot extends SampleRobot {
     private final Joystick stick1 = new Joystick(0);
     private final Joystick stick2 = new Joystick(1);
     private final Joystick xbox = new Joystick(2);
-    private final AtomicReference<CameraGearData> cameraGearRef = new AtomicReference<>();
+    private final AtomicReference<CameraData> cameraGearRef = new AtomicReference<>();
     private final AtomicReference<LongLidarData> frontLidarRef = new AtomicReference<>();
     private final AtomicReference<LongLidarData> rearLidarRef = new AtomicReference<>();
     private final AtomicReference<ShortLidarData> leftLidarRef = new AtomicReference<>();
@@ -91,7 +91,7 @@ public class Robot extends SampleRobot {
     private long lidarRightLastTime = 0;
     private long headingLastTime = 0;
     private AtomicReference<MqttClient> clientRef = new AtomicReference<>();
-    private CameraGearData currentCameraGear = null;
+    private CameraData currentCameraGear = null;
     private LongLidarData currentFrontLidar = null;
     private LongLidarData currentRearLidar = null;
     private ShortLidarData currentLeftLidar = null;
@@ -316,7 +316,7 @@ public class Robot extends SampleRobot {
         }
     }
 
-    public CameraGearData getCurrentCameraGear() {
+    public CameraData getCurrentCameraGear() {
         return this.currentCameraGear;
     }
 
@@ -435,7 +435,7 @@ public class Robot extends SampleRobot {
                                  final String[] info = new String(msg.getPayload()).split(":");
                                  final int currloc = Integer.parseInt(info[0]);
                                  final int width = Integer.parseInt(info[1]);
-                                 cameraGearRef.set(new CameraGearData(currloc, width));
+                                 cameraGearRef.set(new CameraData(currloc, width));
                              });
 
             client.subscribe(Constants.FRONT_LIDAR_TOPIC,
