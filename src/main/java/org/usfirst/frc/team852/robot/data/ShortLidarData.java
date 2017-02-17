@@ -1,9 +1,9 @@
 package org.usfirst.frc.team852.robot.data;
 
-public class LidarData extends GenericData {
+public class ShortLidarData extends GenericData {
     private final int mm;
 
-    public LidarData(int mm) {
+    public ShortLidarData(int mm) {
         this.mm = mm;
     }
 

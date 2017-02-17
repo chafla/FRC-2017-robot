@@ -2,7 +2,7 @@ package org.usfirst.frc.team852.robot.strategies;
 
 import org.usfirst.frc.team852.robot.Robot;
 import org.usfirst.frc.team852.robot.SensorType;
-import org.usfirst.frc.team852.robot.data.LidarData;
+import org.usfirst.frc.team852.robot.data.ShortLidarData;
 
 
 /**
@@ -41,8 +41,8 @@ public class MattStrategy implements Strategy {
     }
 
     public void centerWithLidar(final Robot robot) {
-        final LidarData leftLidar = robot.getCurrentLeftLidar();
-        final LidarData rightLidar = robot.getCurrentRightLidar();
+        final ShortLidarData leftLidar = robot.getCurrentLeftLidar();
+        final ShortLidarData rightLidar = robot.getCurrentRightLidar();
         int leftMm;
         int rightMm;
 
@@ -113,8 +113,8 @@ public class MattStrategy implements Strategy {
     }
 
     public void approachGear(final Robot robot, int dist) {
-        final LidarData leftLidar = robot.getCurrentLeftLidar();
-        final LidarData rightLidar = robot.getCurrentRightLidar();
+        final ShortLidarData leftLidar = robot.getCurrentLeftLidar();
+        final ShortLidarData rightLidar = robot.getCurrentRightLidar();
 
         boolean atDist = false;
         int TOLERANCE = 10;  // Possible allowed distance between the differences

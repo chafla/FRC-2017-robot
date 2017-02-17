@@ -16,7 +16,8 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.usfirst.frc.team852.robot.data.CameraGearData;
 import org.usfirst.frc.team852.robot.data.HeadingData;
-import org.usfirst.frc.team852.robot.data.LidarData;
+import org.usfirst.frc.team852.robot.data.LongLidarData;
+import org.usfirst.frc.team852.robot.data.ShortLidarData;
 import org.usfirst.frc.team852.robot.strategies.JvStrategy;
 import org.usfirst.frc.team852.robot.strategies.Strategy;
 
@@ -34,10 +35,12 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Robot extends SampleRobot {
     public static final String CAMERA_GEAR_LOGGING_POSITION_TOPIC = "logging/camera/gear/alignment";
     public static final String LIDAR_GEAR_LOGGING_POSITION_TOPIC = "logging/lidar/gear/distance";
-    public static final String LIDAR_CLIMBER_LOGGING_POSITION_TOPIC = "logging/lidar/climber/distance";
+    public static final String LONG_LIDAR_LOGGING_POSITION_TOPIC = "logging/lidar/long/distance";
     public static final String HEADING_LOGGING_POSITION_TOPIC = "logging/heading/degrees";
     private static final String mqtt_topic = "roborio/keyboard/command";
     private static final String CAMERA_TOPIC = "camera/gear/x";
+    private static final String FRONT_LIDAR_TOPIC = "lidar/front/cm";
+    private static final String REAR_LIDAR_TOPIC = "lidar/rear/cm";
     private static final String LEFT_LIDAR_TOPIC = "lidar/left/mm";
     private static final String RIGHT_LIDAR_TOPIC = "lidar/right/mm";
     private static final String MQTT_HOSTNAME = "mqtt-turtle.local"; /*"10.8.52.14";*/
@@ -85,18 +88,24 @@ public class Robot extends SampleRobot {
     private final Joystick stick2 = new Joystick(1);
     private final Joystick xbox = new Joystick(2);
     private final AtomicReference<CameraGearData> cameraGearRef = new AtomicReference<>();
-    private final AtomicReference<LidarData> leftLidarRef = new AtomicReference<>();
-    private final AtomicReference<LidarData> rightLidarRef = new AtomicReference<>();
+    private final AtomicReference<LongLidarData> frontLidarRef = new AtomicReference<>();
+    private final AtomicReference<LongLidarData> rearLidarRef = new AtomicReference<>();
+    private final AtomicReference<ShortLidarData> leftLidarRef = new AtomicReference<>();
+    private final AtomicReference<ShortLidarData> rightLidarRef = new AtomicReference<>();
     private final AtomicReference<HeadingData> headingRef = new AtomicReference<>();
     private final RobotDrive robotDrive;
     private long cameraLastTime = 0;
+    private long lidarFrontLastTime = 0;
+    private long lidarRearLastTime = 0;
     private long lidarLeftLastTime = 0;
     private long lidarRightLastTime = 0;
     private long headingLastTime = 0;
     private AtomicReference<MqttClient> clientRef = new AtomicReference<>();
     private CameraGearData currentCameraGear = null;
-    private LidarData currentLeftLidar = null;
-    private LidarData currentRightLidar = null;
+    private LongLidarData currentFrontLidar = null;
+    private LongLidarData currentRearLidar = null;
+    private ShortLidarData currentLeftLidar = null;
+    private ShortLidarData currentRightLidar = null;
     private HeadingData currentHeading = null;
 
     private final ExecutorService logExecutor = Executors.newFixedThreadPool(4);
@@ -264,6 +273,8 @@ public class Robot extends SampleRobot {
 
             // These are set once per iteration of the loop
             this.currentCameraGear = this.cameraGearRef.get();
+            this.currentFrontLidar = this.frontLidarRef.get();
+            this.currentRearLidar = this.rearLidarRef.get();
             this.currentLeftLidar = this.leftLidarRef.get();
             this.currentRightLidar = this.rightLidarRef.get();
             this.currentHeading = this.headingRef.get();
@@ -324,11 +335,19 @@ public class Robot extends SampleRobot {
         return this.currentCameraGear;
     }
 
-    public LidarData getCurrentLeftLidar() {
+    public LongLidarData getCurrentFrontLidar() {
+        return this.currentFrontLidar;
+    }
+
+    public LongLidarData getCurrentRearLidar() {
+        return this.currentRearLidar;
+    }
+
+    public ShortLidarData getCurrentLeftLidar() {
         return this.currentLeftLidar;
     }
 
-    public LidarData getCurrentRightLidar() {
+    public ShortLidarData getCurrentRightLidar() {
         return this.currentRightLidar;
     }
 
@@ -338,6 +357,14 @@ public class Robot extends SampleRobot {
 
     public long getCameraLastTime() {
         return this.cameraLastTime;
+    }
+
+    public long getLidarFrontLastTime() {
+        return this.lidarFrontLastTime;
+    }
+
+    public long getLidarRearLastTime() {
+        return this.lidarRearLastTime;
     }
 
     public long getLidarLeftLastTime() {
@@ -431,14 +458,14 @@ public class Robot extends SampleRobot {
             e1.printStackTrace();
         }
 
-        // subscribe to left lidar topic
+        // subscribe to front lidar topic
         try {
-            client.subscribe(LEFT_LIDAR_TOPIC,
+            client.subscribe(FRONT_LIDAR_TOPIC,
                              (topic, msg) -> {
                                  try {
                                      final String cmdmsg = new String(msg.getPayload());
                                      final int dist = Integer.parseInt(cmdmsg);
-                                     leftLidarRef.set(new LidarData(dist));
+                                     frontLidarRef.set(new LongLidarData(dist));
                                  }
                                  catch (Exception e) {
                                      System.out.println("Error in subscribe:" + e.getMessage());
@@ -446,8 +473,86 @@ public class Robot extends SampleRobot {
                                  }
                              });
         }
-        catch (Exception e) {
+        catch (MqttException e) {
             System.out.println("Error in subscribe:" + e.getMessage());
+            e.printStackTrace();
+        }
+
+        // subscribe to rear lidar topic
+        try {
+            client.subscribe(REAR_LIDAR_TOPIC,
+                             (topic, msg) -> {
+                                 try {
+                                     final String cmdmsg = new String(msg.getPayload());
+                                     final int dist = Integer.parseInt(cmdmsg);
+                                     rearLidarRef.set(new LongLidarData(dist));
+                                 }
+                                 catch (Exception e) {
+                                     System.out.println("Error in subscribe:" + e.getMessage());
+                                     e.printStackTrace();
+                                 }
+                             });
+        }
+        catch (MqttException e) {
+            System.out.println("Error in subscribe:" + e.getMessage());
+            e.printStackTrace();
+        }
+
+        // subscribe to left lidar topic
+        try {
+            client.subscribe(LEFT_LIDAR_TOPIC,
+                             (topic, msg) -> {
+                                 try {
+                                     final String cmdmsg = new String(msg.getPayload());
+                                     final int dist = Integer.parseInt(cmdmsg);
+                                     leftLidarRef.set(new ShortLidarData(dist));
+                                 }
+                                 catch (Exception e) {
+                                     System.out.println("Error in subscribe:" + e.getMessage());
+                                     e.printStackTrace();
+                                 }
+                             });
+        }
+        catch (MqttException e) {
+            System.out.println("Error in subscribe:" + e.getMessage());
+            e.printStackTrace();
+        }
+
+        // subscribe to right lidar topic
+        try {
+            client.subscribe(RIGHT_LIDAR_TOPIC,
+                             (topic, msg) -> {
+                                 try {
+                                     final String cmdmsg = new String(msg.getPayload());
+                                     final int dist = Integer.parseInt(cmdmsg);
+                                     rightLidarRef.set(new ShortLidarData(dist));
+                                 }
+                                 catch (Exception e) {
+                                     System.out.println("Error in subscribe:" + e.getMessage());
+                                     e.printStackTrace();
+                                 }
+                             });
+        }
+        catch (MqttException e) {
+            System.out.println("Error in subscribe:" + e.getMessage());
+            e.printStackTrace();
+        }
+
+        // subscribe to heading topic
+        try {
+            client.subscribe(HEADING_TOPIC, (topic, msg) -> {
+                try {
+                    final String cmdmsg = new String(msg.getPayload());
+                    final double degree = Double.parseDouble(cmdmsg);
+                    headingRef.set(new HeadingData(degree));
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            });
+        }
+        catch (MqttException e) {
             e.printStackTrace();
         }
 
@@ -465,42 +570,6 @@ public class Robot extends SampleRobot {
 //        } catch (Exception e) {
 //            e.printStackTrace();
 //        }
-
-        // subscribe to right lidar topic
-        try {
-            client.subscribe(RIGHT_LIDAR_TOPIC,
-                             (topic, msg) -> {
-                                 try {
-                                     final String cmdmsg = new String(msg.getPayload());
-                                     final int dist = Integer.parseInt(cmdmsg);
-                                     rightLidarRef.set(new LidarData(dist));
-                                 }
-                                 catch (Exception e) {
-                                     System.out.println("Error in subscribe:" + e.getMessage());
-                                     e.printStackTrace();
-                                 }
-                             });
-        }
-        catch (Exception e) {
-            System.out.println("Error in subscribe:" + e.getMessage());
-            e.printStackTrace();
-        }
-
-        // subscribe to heading topic
-        try {
-            client.subscribe(HEADING_TOPIC, (topic, msg) -> {
-                try {
-                    final String cmdmsg = new String(msg.getPayload());
-                    final double degree = Double.parseDouble(cmdmsg);
-                    headingRef.set(new HeadingData(degree));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     private Integer valsGetInt(final String[] vals, final int idx) {

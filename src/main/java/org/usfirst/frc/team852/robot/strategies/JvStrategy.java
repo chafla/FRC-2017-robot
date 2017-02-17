@@ -3,7 +3,7 @@ package org.usfirst.frc.team852.robot.strategies;
 import org.usfirst.frc.team852.robot.Robot;
 import org.usfirst.frc.team852.robot.data.CameraGearData;
 import org.usfirst.frc.team852.robot.data.HeadingData;
-import org.usfirst.frc.team852.robot.data.LidarData;
+import org.usfirst.frc.team852.robot.data.ShortLidarData;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -57,17 +57,17 @@ public class JvStrategy implements Strategy {
     @Override
     public void xboxBButtonPressed(final Robot robot) {
         // v1 of lidar driving
-        final LidarData leftLidarData = robot.getCurrentLeftLidar();
-        final LidarData rightLidarData = robot.getCurrentRightLidar();
+        final ShortLidarData leftLidarData = robot.getCurrentLeftLidar();
+        final ShortLidarData rightLidarData = robot.getCurrentRightLidar();
 
         if (leftLidarData == null || rightLidarData == null) {
-            System.out.println("Null LidarData");
+            System.out.println("Null ShortLidarData");
             return;
         }
 
         if (leftLidarData.getTimestamp() <= robot.getLidarLeftLastTime()
                 || rightLidarData.getTimestamp() <= robot.getLidarRightLastTime()) {
-            System.out.println("Stale LidarData");
+            System.out.println("Stale ShortLidarData");
             return;
         } else {
             robot.updateLidarLeftLastTime();
@@ -144,16 +144,16 @@ public class JvStrategy implements Strategy {
     @Override
     public void xboxYButtonPressed(final Robot robot) {
         // v2 of lidar driving
-        final LidarData leftLidarData = robot.getCurrentLeftLidar();
-        final LidarData rightLidarData = robot.getCurrentRightLidar();
+        final ShortLidarData leftLidarData = robot.getCurrentLeftLidar();
+        final ShortLidarData rightLidarData = robot.getCurrentRightLidar();
 
         if (leftLidarData == null || rightLidarData == null) {
-            System.out.println("Null LidarData");
+            System.out.println("Null ShortLidarData");
             return;
         }
         if (leftLidarData.getTimestamp() <= robot.getLidarLeftLastTime()
                 || rightLidarData.getTimestamp() <= robot.getLidarRightLastTime()) {
-            System.out.println("Stale LidarData");
+            System.out.println("Stale ShortLidarData");
             return;
         } else {
             robot.updateLidarLeftLastTime();
