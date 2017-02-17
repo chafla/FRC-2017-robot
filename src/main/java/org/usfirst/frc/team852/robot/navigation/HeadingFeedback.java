@@ -14,12 +14,10 @@ public class HeadingFeedback {
 
     public double getError(final double heading) {
         final double correction;
-        if (this.initialHeading <= 120)
-            correction = heading - (heading > (240) ? (this.initialHeading + 360) : this.initialHeading);
-        else if (this.initialHeading >= 240)
-            correction = (heading < (120) ? (heading + 360) : heading) - this.initialHeading;
+        if (this.initialHeading <= 180)
+            correction = heading - (heading > 180 ? (this.initialHeading + 360) : this.initialHeading);
         else
-            correction = heading - this.initialHeading;
+            correction = (heading <= 180 ? (heading + 360) : heading) - this.initialHeading;
 
         if (correction <= -180)
             return correction + 360;

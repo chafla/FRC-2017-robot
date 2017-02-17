@@ -61,6 +61,8 @@ public class HeadingFeedbackTest {
         assertThat(fb.getError(170)).isEqualTo(-10);
         assertThat(fb.getError(190)).isEqualTo(10);
 
+        assertThat(fb.getError(180.1)).isCloseTo(.1, offset);
+        assertThat(fb.getError(179.9)).isCloseTo(-.1, offset);
         assertThat(fb.getError(190.1)).isCloseTo(10.1, offset);
         assertThat(fb.getError(169.9)).isCloseTo(-10.1, offset);
 
@@ -77,6 +79,9 @@ public class HeadingFeedbackTest {
         assertThat(fb.getError(180)).isEqualTo(180);
         assertThat(fb.getError(10)).isEqualTo(10);
         assertThat(fb.getError(190)).isEqualTo(-170);
+
+        assertThat(fb.getError(.1)).isCloseTo(.1, offset);
+        assertThat(fb.getError(359.9)).isCloseTo(-.1, offset);
     }
 
     @Test
@@ -110,6 +115,9 @@ public class HeadingFeedbackTest {
         assertThat(fb.getError(0)).isEqualTo(90);
         assertThat(fb.getError(90)).isEqualTo(180);
         assertThat(fb.getError(180)).isEqualTo(-90);
+
+        assertThat(fb.getError(180.1)).isCloseTo(-89.9, offset);
+        assertThat(fb.getError(179.9)).isCloseTo(-90.1, offset);
     }
 
 
