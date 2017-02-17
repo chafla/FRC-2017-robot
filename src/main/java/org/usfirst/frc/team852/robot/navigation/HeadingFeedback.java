@@ -1,4 +1,4 @@
-package org.usfirst.frc.team852.robot.strategies;
+package org.usfirst.frc.team852.robot.navigation;
 
 public class HeadingFeedback {
 

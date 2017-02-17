@@ -18,8 +18,8 @@ import org.usfirst.frc.team852.robot.data.CameraData;
 import org.usfirst.frc.team852.robot.data.HeadingData;
 import org.usfirst.frc.team852.robot.data.LongLidarData;
 import org.usfirst.frc.team852.robot.data.ShortLidarData;
-import org.usfirst.frc.team852.robot.strategies.JvStrategy;
-import org.usfirst.frc.team852.robot.strategies.Strategy;
+import org.usfirst.frc.team852.robot.strategy.JvStrategy;
+import org.usfirst.frc.team852.robot.strategy.Strategy;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

@@ -2,7 +2,7 @@ package org.usfirst.frc.team852.robot;
 
 import org.assertj.core.data.Offset;
 import org.junit.Test;
-import org.usfirst.frc.team852.robot.strategies.HeadingFeedback;
+import org.usfirst.frc.team852.robot.navigation.HeadingFeedback;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

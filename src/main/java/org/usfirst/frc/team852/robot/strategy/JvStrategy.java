@@ -1,9 +1,10 @@
-package org.usfirst.frc.team852.robot.strategies;
+package org.usfirst.frc.team852.robot.strategy;
 
 import org.usfirst.frc.team852.robot.Robot;
 import org.usfirst.frc.team852.robot.data.CameraData;
 import org.usfirst.frc.team852.robot.data.HeadingData;
 import org.usfirst.frc.team852.robot.data.ShortLidarData;
+import org.usfirst.frc.team852.robot.navigation.HeadingFeedback;
 
 import java.util.concurrent.atomic.AtomicReference;
 
