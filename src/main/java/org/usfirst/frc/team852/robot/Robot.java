@@ -33,19 +33,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * class.
  */
 public class Robot extends SampleRobot {
-    public static final String CAMERA_GEAR_LOGGING_POSITION_TOPIC = "logging/camera/gear/alignment";
-    public static final String LIDAR_GEAR_LOGGING_POSITION_TOPIC = "logging/lidar/gear/distance";
-    public static final String LONG_LIDAR_LOGGING_POSITION_TOPIC = "logging/lidar/long/distance";
-    public static final String HEADING_LOGGING_POSITION_TOPIC = "logging/heading/degrees";
-    private static final String mqtt_topic = "roborio/keyboard/command";
-    private static final String CAMERA_TOPIC = "camera/gear/x";
-    private static final String FRONT_LIDAR_TOPIC = "lidar/front/cm";
-    private static final String REAR_LIDAR_TOPIC = "lidar/rear/cm";
-    private static final String LEFT_LIDAR_TOPIC = "lidar/left/mm";
-    private static final String RIGHT_LIDAR_TOPIC = "lidar/right/mm";
-    private static final String MQTT_HOSTNAME = "mqtt-turtle.local"; /*"10.8.52.14";*/
-    private static final String HEADING_TOPIC = "heading/degrees";
-    private static final int MQTT_PORT = 1883;
     private static final int XBOX_A = 1;
     private static final int XBOX_B = 2;
     private static final int XBOX_X = 3;
@@ -94,6 +81,9 @@ public class Robot extends SampleRobot {
     private final AtomicReference<ShortLidarData> rightLidarRef = new AtomicReference<>();
     private final AtomicReference<HeadingData> headingRef = new AtomicReference<>();
     private final RobotDrive robotDrive;
+    private final ExecutorService logExecutor = Executors.newFixedThreadPool(4);
+    private final ExecutorService mqttExecutor = Executors.newFixedThreadPool(1);
+    private final Strategy strategy = new JvStrategy();
     private long cameraLastTime = 0;
     private long lidarFrontLastTime = 0;
     private long lidarRearLastTime = 0;
@@ -107,11 +97,6 @@ public class Robot extends SampleRobot {
     private ShortLidarData currentLeftLidar = null;
     private ShortLidarData currentRightLidar = null;
     private HeadingData currentHeading = null;
-
-    private final ExecutorService logExecutor = Executors.newFixedThreadPool(4);
-    private final ExecutorService mqttExecutor = Executors.newFixedThreadPool(1);
-
-    private final Strategy strategy = new JvStrategy();
 
 	/*
      * Initialize a talon so that speed control will work.
@@ -149,7 +134,7 @@ public class Robot extends SampleRobot {
             // We modified createMqttClient in org.athenian.Utils.java so that it
             // sets the option to automatically reconnect if the connection fails!
             while (true) {
-                final MqttClient client = Utils.createMqttClient(MQTT_HOSTNAME, MQTT_PORT, new BaseMqttCallback());
+                final MqttClient client = Utils.createMqttClient(Constants.MQTT_HOSTNAME, Constants.MQTT_PORT, new BaseMqttCallback());
                 if (client != null) {
                     clientRef.set(client);
                     break;
@@ -383,6 +368,14 @@ public class Robot extends SampleRobot {
         this.cameraLastTime = System.currentTimeMillis();
     }
 
+    public void updateLidarFrontLastTime() {
+        this.lidarFrontLastTime = System.currentTimeMillis();
+    }
+
+    public void updateLidarRearLastTime() {
+        this.lidarRearLastTime = System.currentTimeMillis();
+    }
+
     public void updateLidarLeftLastTime() {
         this.lidarLeftLastTime = System.currentTimeMillis();
     }
@@ -420,14 +413,11 @@ public class Robot extends SampleRobot {
                         if (client != null)
                             client.publish(sensorType.getTopic(), new MqttMessage(msg.getBytes()));
                     }
-                    catch (MqttException e1) {
-                        e1.printStackTrace();
+                    catch (MqttException e) {
+                        e.printStackTrace();
                     }
                 });
     }
-
-    // May want multiple listeners, one per topic - or one listener
-    // which gets all topics. Not sure which at this point.
 
     private boolean listenerEnabled(final int listenerType) {
         // probably also want to check that an xbox button hasn't been pressed!
@@ -440,7 +430,7 @@ public class Robot extends SampleRobot {
         System.out.println("Subscribing to topics");
 
         try {
-            client.subscribe(CAMERA_TOPIC,
+            client.subscribe(Constants.CAMERA_TOPIC,
                              (topic, msg) -> {
                                  final String[] info = new String(msg.getPayload()).split(":");
                                  final int currloc = Integer.parseInt(info[0]);
@@ -448,36 +438,31 @@ public class Robot extends SampleRobot {
                                  cameraGearRef.set(new CameraGearData(currloc, width));
                              });
 
-            // subscribe to front lidar topic
-            client.subscribe(FRONT_LIDAR_TOPIC,
+            client.subscribe(Constants.FRONT_LIDAR_TOPIC,
                              (topic, msg) -> {
                                  final int dist = Integer.parseInt(new String(msg.getPayload()));
                                  frontLidarRef.set(new LongLidarData(dist));
                              });
 
-            // subscribe to rear lidar topic
-            client.subscribe(REAR_LIDAR_TOPIC,
+            client.subscribe(Constants.REAR_LIDAR_TOPIC,
                              (topic, msg) -> {
                                  final int dist = Integer.parseInt(new String(msg.getPayload()));
                                  rearLidarRef.set(new LongLidarData(dist));
                              });
 
-            // subscribe to left lidar topic
-            client.subscribe(LEFT_LIDAR_TOPIC,
+            client.subscribe(Constants.LEFT_LIDAR_TOPIC,
                              (topic, msg) -> {
                                  final int dist = Integer.parseInt(new String(msg.getPayload()));
                                  leftLidarRef.set(new ShortLidarData(dist));
                              });
 
-            // subscribe to right lidar topic
-            client.subscribe(RIGHT_LIDAR_TOPIC,
+            client.subscribe(Constants.RIGHT_LIDAR_TOPIC,
                              (topic, msg) -> {
                                  final int dist = Integer.parseInt(new String(msg.getPayload()));
                                  rightLidarRef.set(new ShortLidarData(dist));
                              });
 
-            // subscribe to heading topic
-            client.subscribe(HEADING_TOPIC,
+            client.subscribe(Constants.HEADING_TOPIC,
                              (topic, msg) -> {
                                  final double degree = Double.parseDouble(new String(msg.getPayload()));
                                  headingRef.set(new HeadingData(degree));
