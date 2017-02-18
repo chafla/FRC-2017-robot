@@ -3,11 +3,8 @@ package org.usfirst.frc.team852.robot;
 import com.ctre.CANTalon;
 import com.ctre.CANTalon.FeedbackDevice;
 import com.ctre.CANTalon.TalonControlMode;
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.RobotDrive;
+import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
-import edu.wpi.first.wpilibj.SampleRobot;
-import edu.wpi.first.wpilibj.Timer;
 import org.athenian.BaseMqttCallback;
 import org.athenian.Utils;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
@@ -66,10 +63,12 @@ public class Robot extends SampleRobot {
         }
     };
     // Drives practice robot with battery at FRONT
-    private final CANTalon frontLeft = new CANTalon(4);
-    private final CANTalon frontRight = new CANTalon(7);
+    private final CANTalon frontLeft = new CANTalon(3);
+    private final CANTalon frontRight = new CANTalon(2);
     private final CANTalon rearLeft = new CANTalon(0);
-    private final CANTalon rearRight = new CANTalon(3);
+    private final CANTalon rearRight = new CANTalon(1);
+    private final Solenoid frontPiston = new Solenoid(0);
+    private final Solenoid backPiston = new Solenoid(1);
     private final Joystick stick1 = new Joystick(0);
     private final Joystick stick2 = new Joystick(1);
     private final Joystick xbox = new Joystick(2);
@@ -109,7 +108,8 @@ public class Robot extends SampleRobot {
         // Looks like maximum RPM (i.e joystick full up) is 400 RPM.
 
         this.initAllTalons();
-
+        frontPiston.set(true);
+        backPiston.set(false);
         this.robotDrive = new RobotDrive(frontLeft, rearLeft, frontRight, rearRight);
 
         // Motors on one side are reversed, so unless the red/black wires are
@@ -401,6 +401,16 @@ public class Robot extends SampleRobot {
         this.robotDrive.mecanumDrive_Cartesian(x, y, rot, 0);
         Timer.delay(delay);
         this.robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+    }
+
+    public void pushGear() {
+        frontPiston.set(false);
+        backPiston.set(true);
+    }
+
+    public void retractPiston() {
+        frontPiston.set(true);
+        backPiston.set(false);
     }
 
     public void logMsg(final SensorType sensorType, final String desc) {
