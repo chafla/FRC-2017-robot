@@ -13,4 +13,8 @@ public interface Strategy {
     void xboxXButtonPressed(Robot robot);
 
     void xboxYButtonPressed(Robot robot);
+
+    void xboxLBButtonPressed(Robot robot);
+
+    void xboxRBButtonPressed(Robot robot);
 }

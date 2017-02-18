@@ -90,7 +90,7 @@ public class JvStrategy implements Strategy {
         else if (lVal < rVal - 10)
             robot.drive(0, 0, 0.25, 0.1, LIDAR_GEAR, "rotate counter-clockwise");
         else
-            robot.logMsg(LIDAR_GEAR, "centered");
+            robot.logMsg(LIDAR_GEAR, "centered by drive");
     }
 
     private static final double THRESHHOLD_DEGREES = 1.5;
@@ -184,5 +184,40 @@ public class JvStrategy implements Strategy {
             else if (lVal < 290 && rVal < 290)
                 robot.drive(0, 0.3, 0, 0.1, LIDAR_GEAR, "backward");
         }
+    }
+
+    @Override
+    public void xboxLBButtonPressed(final Robot robot) {
+        robot.pushGear();
+        robot.retractPiston();
+    }
+
+    @Override
+    public void xboxRBButtonPressed(final Robot robot) {
+        final CameraData cameraData = robot.getCurrentCameraGear();
+
+        if (cameraData == null) {
+            System.out.println("Null CameraData");
+            return;
+        }
+        if (cameraData.getTimestamp() <= robot.getCameraLastTime()) {
+            System.out.println("Stale CameraData");
+            return;
+        } else {
+            robot.updateCameraLastTime();
+        }
+
+        final int xVal = cameraData.getX();
+        final int wVal = cameraData.getWidth();
+        final int error = 3;
+
+        if (xVal == -1)
+            System.out.println("No camera data");
+        else if (xVal < (wVal / 2) - error)
+            robot.moveRandPRight();
+        else if (xVal > (wVal / 2) + error)
+            robot.moveRandPRight();
+        else
+            robot.logMsg(CAMERA_GEAR, "centered by RandP");
     }
 }

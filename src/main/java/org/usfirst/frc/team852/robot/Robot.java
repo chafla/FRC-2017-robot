@@ -67,8 +67,11 @@ public class Robot extends SampleRobot {
     private final CANTalon frontRight = new CANTalon(2);
     private final CANTalon rearLeft = new CANTalon(0);
     private final CANTalon rearRight = new CANTalon(1);
-    private final Solenoid frontPiston = new Solenoid(0);
-    private final Solenoid backPiston = new Solenoid(1);
+    private final CANTalon rackAndPinion = new CANTalon(5);
+    private final CANTalon climber = new CANTalon(4);
+    private final DoubleSolenoid piston = new DoubleSolenoid(0, 1);
+    private final DigitalInput rightLimitSwitch = new DigitalInput(0);
+    private final DigitalInput leftLimitSwitch = new DigitalInput(1);
     private final Joystick stick1 = new Joystick(0);
     private final Joystick stick2 = new Joystick(1);
     private final Joystick xbox = new Joystick(2);
@@ -108,8 +111,7 @@ public class Robot extends SampleRobot {
         // Looks like maximum RPM (i.e joystick full up) is 400 RPM.
 
         this.initAllTalons();
-        frontPiston.set(true);
-        backPiston.set(false);
+        piston.set(DoubleSolenoid.Value.kOff);
         this.robotDrive = new RobotDrive(frontLeft, rearLeft, frontRight, rearRight);
 
         // Motors on one side are reversed, so unless the red/black wires are
@@ -404,13 +406,27 @@ public class Robot extends SampleRobot {
     }
 
     public void pushGear() {
-        frontPiston.set(false);
-        backPiston.set(true);
+        piston.set(DoubleSolenoid.Value.kForward);
     }
 
     public void retractPiston() {
-        frontPiston.set(true);
-        backPiston.set(false);
+        piston.set(DoubleSolenoid.Value.kReverse);
+    }
+
+    public void moveRandPRight() {
+        if (!rightLimitSwitch.get()) {
+            rackAndPinion.set(0.3); // may need to reverse
+            Timer.delay(0.1);
+            rackAndPinion.set(0);
+        }
+    }
+
+    public void moveRandPLeft() {
+        if (!leftLimitSwitch.get()) {
+            rackAndPinion.set(-0.3);
+            Timer.delay(0.1);
+            rackAndPinion.set(0);
+        }
     }
 
     public void logMsg(final SensorType sensorType, final String desc) {
