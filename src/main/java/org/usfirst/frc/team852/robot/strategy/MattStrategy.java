@@ -14,20 +14,50 @@ public class MattStrategy implements Strategy {
 
     }
 
-    public void xboxYButtonPressed(final Robot robot) {
+    public void onXboxY(final Robot robot) {
         centerWithLidar(robot);
     }
 
-    public void xboxXButtonPressed(final Robot robot) {
+    @Override
+    public void onXboxLB(Robot robot) {
+
+    }
+
+    @Override
+    public void onXboxRB(Robot robot) {
+
+    }
+
+    @Override
+    public void onXboxBack(Robot robot) {
+
+    }
+
+    @Override
+    public void onXboxStart(Robot robot) {
+
+    }
+
+    @Override
+    public void onXboxLS(Robot robot) {
+
+    }
+
+    @Override
+    public void onXboxRS(Robot robot) {
+
+    }
+
+    public void onXboxX(final Robot robot) {
 
 
     }
 
-    public void xboxAButtonPressed(final Robot robot) {
+    public void onXboxA(final Robot robot) {
         approachGear(robot, 450);
     }
 
-    public void xboxBButtonPressed(final Robot robot) {
+    public void onXboxB(final Robot robot) {
 
 
     }

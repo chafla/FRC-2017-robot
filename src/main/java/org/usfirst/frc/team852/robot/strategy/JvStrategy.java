@@ -27,8 +27,10 @@ public class JvStrategy implements Strategy {
         this.headingFeedbackRef.set(null);
     }
 
+
+    // consider renaming these methods
     @Override
-    public void xboxAButtonPressed(final Robot robot) {
+    public void onXboxA(final Robot robot) {
         final CameraData cameraData = robot.getCurrentCameraGear();
 
         if (cameraData == null) {
@@ -56,7 +58,7 @@ public class JvStrategy implements Strategy {
     }
 
     @Override
-    public void xboxBButtonPressed(final Robot robot) {
+    public void onXboxB(final Robot robot) {
         // v1 of lidar driving
         final LidarData leftLidarData = robot.getCurrentLeftLidar();
         final LidarData rightLidarData = robot.getCurrentRightLidar();
@@ -97,7 +99,7 @@ public class JvStrategy implements Strategy {
     private static final double PID_CORRECTION = 0.1;
 
     @Override
-    public void xboxXButtonPressed(final Robot robot) {
+    public void onXboxX(final Robot robot) {
         final HeadingData headingData = robot.getCurrentHeading();
 
         if (headingData == null) {
@@ -141,7 +143,7 @@ public class JvStrategy implements Strategy {
     }
 
     @Override
-    public void xboxYButtonPressed(final Robot robot) {
+    public void onXboxY(final Robot robot) {
         // v2 of lidar driving
         final LidarData leftLidarData = robot.getCurrentLeftLidar();
         final LidarData rightLidarData = robot.getCurrentRightLidar();
@@ -187,13 +189,13 @@ public class JvStrategy implements Strategy {
     }
 
     @Override
-    public void xboxLBButtonPressed(final Robot robot) {
+    public void onXboxLB(final Robot robot) {
         robot.pushGear();
         robot.retractPiston();
     }
 
     @Override
-    public void xboxRBButtonPressed(final Robot robot) {
+    public void onXboxRB(final Robot robot) {
         final CameraData cameraData = robot.getCurrentCameraGear();
 
         if (cameraData == null) {
@@ -222,8 +224,63 @@ public class JvStrategy implements Strategy {
     }
 
     @Override
-    public void xboxStartButtonPressed(Robot robot) {
+    public void onXboxBack(Robot robot) {
+        final HeadingData headingData = robot.getCurrentHeading();
+
+        if (headingData == null) {
+            System.out.println("Null HeadingData");
+            return;
+        }
+
+        if (headingData.getTimestamp() <= robot.getHeadingLastTime()) {
+            System.out.println("Stale HeadingData");
+            return;
+        } else {
+            robot.updateHeadingLastTime();
+        }
+
+        final double degrees = headingData.getDegree();
+        final double turn = 45;
+
+        // This will be set the first time through
+        if (this.getHeadingFeedback() == null)
+            this.headingFeedbackRef.set(new HeadingFeedback(degrees + turn));
+
+        final double errorDegrees = this.getHeadingFeedback().getError(degrees);
+
+        final double turnSpeed;
+        final String command;
+        if (errorDegrees > THRESHHOLD_DEGREES) {
+            // veered right, turn left, turnSpeed will be no less than -1
+            turnSpeed = Math.max(errorDegrees * PID_CORRECTION, -1);
+            command = "Counter-clockwise";
+
+        } else if (errorDegrees < (THRESHHOLD_DEGREES * -1)) {
+            // veered left, turn right, turnSpeed will be no more 1
+            turnSpeed = Math.min(errorDegrees * PID_CORRECTION, 1);
+            command = "Clockwise";
+        } else {
+            // On course, drive straight.
+            turnSpeed = 0;
+            command = "Centered";
+        }
+
+        robot.drive(0, 0, turnSpeed, 0, HEADING, command);
+    }
+
+    @Override
+    public void onXboxStart(Robot robot) {
         while (robot.isEnabled())
             robot.climb();
+    }
+
+    @Override
+    public void onXboxLS(Robot robot) {
+        headingFeedbackRef.set(null);
+    }
+
+    @Override
+    public void onXboxRS(Robot robot) {
+        robot.drive(0, 0.5, 0, 0, HEADING, "straight");
     }
 }

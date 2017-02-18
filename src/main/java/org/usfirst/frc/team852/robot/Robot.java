@@ -188,6 +188,9 @@ public class Robot extends SampleRobot {
      */
     @Override
     public void autonomous() {
+        final CameraData cameraData = getCurrentCameraGear();
+        final LidarData frontLidarData = getCurrentFrontLidar();
+        final LidarData rearLidarData = getCurrentRearLidar();
 
     }
 
@@ -270,19 +273,19 @@ public class Robot extends SampleRobot {
             this.currentHeading = this.headingRef.get();
 
             if (this.xbox.getRawButton(XBOX_A))
-                this.strategy.xboxAButtonPressed(this);
+                this.strategy.onXboxA(this);
             else if (this.xbox.getRawButton(XBOX_B))
-                this.strategy.xboxBButtonPressed(this);
+                this.strategy.onXboxB(this);
             else if (this.xbox.getRawButton(XBOX_X))
-                this.strategy.xboxXButtonPressed(this);
+                this.strategy.onXboxX(this);
             else if (this.xbox.getRawButton(XBOX_Y))
-                this.strategy.xboxYButtonPressed(this);
+                this.strategy.onXboxY(this);
             else if (this.xbox.getRawButton(XBOX_LB))
-                this.strategy.xboxLBButtonPressed(this);
+                this.strategy.onXboxLB(this);
             else if (this.xbox.getRawButton(XBOX_RB))
-                this.strategy.xboxRBButtonPressed(this);
+                this.strategy.onXboxRB(this);
             else if (this.xbox.getRawButton(XBOX_Start))
-                this.strategy.xboxStartButtonPressed(this);
+                this.strategy.onXboxStart(this);
 
             // NOTE! Left/right movement may be reversed, may need to modify signs!
 
@@ -424,9 +427,9 @@ public class Robot extends SampleRobot {
     }
 
     public void moveRandPRight() {
-        if (!rightLimitSwitch.get()) {
+        if (!rightLimitSwitch.get()) { // consider switching to while
             rackAndPinion.set(0.3); // may need to reverse
-            Timer.delay(0.1);
+            Timer.delay(0.01);
             rackAndPinion.set(0);
         }
     }
@@ -434,7 +437,7 @@ public class Robot extends SampleRobot {
     public void moveRandPLeft() {
         if (!leftLimitSwitch.get()) {
             rackAndPinion.set(-0.3);
-            Timer.delay(0.1);
+            Timer.delay(0.01);
             rackAndPinion.set(0);
         }
     }

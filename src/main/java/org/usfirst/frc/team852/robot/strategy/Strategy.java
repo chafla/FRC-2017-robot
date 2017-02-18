@@ -5,18 +5,24 @@ import org.usfirst.frc.team852.robot.Robot;
 public interface Strategy {
 
     void reset();
-    
-    void xboxAButtonPressed(Robot robot);
 
-    void xboxBButtonPressed(Robot robot);
+    void onXboxA(Robot robot);
 
-    void xboxXButtonPressed(Robot robot);
+    void onXboxB(Robot robot);
 
-    void xboxYButtonPressed(Robot robot);
+    void onXboxX(Robot robot);
 
-    void xboxLBButtonPressed(Robot robot);
+    void onXboxY(Robot robot);
 
-    void xboxRBButtonPressed(Robot robot);
+    void onXboxLB(Robot robot);
 
-    void xboxStartButtonPressed(Robot robot);
+    void onXboxRB(Robot robot);
+
+    void onXboxBack(Robot robot);
+
+    void onXboxStart(Robot robot);
+
+    void onXboxLS(Robot robot);
+
+    void onXboxRS(Robot robot);
 }
