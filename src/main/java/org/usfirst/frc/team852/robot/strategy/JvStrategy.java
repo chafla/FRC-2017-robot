@@ -220,4 +220,10 @@ public class JvStrategy implements Strategy {
         else
             robot.logMsg(CAMERA_GEAR, "centered by RandP");
     }
+
+    @Override
+    public void xboxStartButtonPressed(Robot robot) {
+        while (robot.isEnabled())
+            robot.climb();
+    }
 }

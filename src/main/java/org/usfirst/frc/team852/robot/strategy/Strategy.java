@@ -17,4 +17,6 @@ public interface Strategy {
     void xboxLBButtonPressed(Robot robot);
 
     void xboxRBButtonPressed(Robot robot);
+
+    void xboxStartButtonPressed(Robot robot);
 }

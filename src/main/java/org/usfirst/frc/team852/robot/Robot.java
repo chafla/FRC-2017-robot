@@ -33,6 +33,10 @@ public class Robot extends SampleRobot {
     private static final int XBOX_B = 2;
     private static final int XBOX_X = 3;
     private static final int XBOX_Y = 4;
+    private static final int XBOX_LB = 5;
+    private static final int XBOX_RB = 6;
+    private static final int XBOX_Start = 8;
+
     private static final double s_deadZone = 0.05;
     final IMqttMessageListener messageListener = (topic, msg) -> {
 
@@ -273,6 +277,12 @@ public class Robot extends SampleRobot {
                 this.strategy.xboxXButtonPressed(this);
             else if (this.xbox.getRawButton(XBOX_Y))
                 this.strategy.xboxYButtonPressed(this);
+            else if (this.xbox.getRawButton(XBOX_LB))
+                this.strategy.xboxLBButtonPressed(this);
+            else if (this.xbox.getRawButton(XBOX_RB))
+                this.strategy.xboxRBButtonPressed(this);
+            else if (this.xbox.getRawButton(XBOX_Start))
+                this.strategy.xboxStartButtonPressed(this);
 
             // NOTE! Left/right movement may be reversed, may need to modify signs!
 
@@ -427,6 +437,10 @@ public class Robot extends SampleRobot {
             Timer.delay(0.1);
             rackAndPinion.set(0);
         }
+    }
+
+    public void climb() {
+        climber.set(0.3);
     }
 
     public void logMsg(final SensorType sensorType, final String desc) {
