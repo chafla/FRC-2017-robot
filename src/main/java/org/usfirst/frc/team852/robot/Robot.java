@@ -7,10 +7,7 @@ import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
 import org.athenian.BaseMqttCallback;
 import org.athenian.Utils;
-import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.*;
 import org.usfirst.frc.team852.robot.data.CameraData;
 import org.usfirst.frc.team852.robot.data.DataType;
 import org.usfirst.frc.team852.robot.data.HeadingData;
@@ -21,6 +18,8 @@ import org.usfirst.frc.team852.robot.strategy.Strategy;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static java.lang.String.format;
 
 //import org.eclipse.paho.client.mqttv3.MqttException;
 
@@ -90,12 +89,11 @@ public class Robot extends SampleRobot {
     private final AtomicReference<LidarData> leftLidarRef = new AtomicReference<>();
     private final AtomicReference<LidarData> rightLidarRef = new AtomicReference<>();
     private final AtomicReference<HeadingData> headingRef = new AtomicReference<>();
-    private final RobotDrive robotDrive;
     private final ExecutorService logExecutor = Executors.newFixedThreadPool(4);
     private final ExecutorService mqttExecutor = Executors.newFixedThreadPool(1);
     private final Strategy strategy = new JvStrategy();
+    private final AtomicReference<MqttClient> mqttClientRef = new AtomicReference<>();
 
-    private AtomicReference<MqttClient> clientRef = new AtomicReference<>();
     private CameraData currentCameraGear = null;
     private LidarData currentFrontLidar = null;
     private LidarData currentRearLidar = null;
@@ -103,6 +101,7 @@ public class Robot extends SampleRobot {
     private LidarData currentRightLidar = null;
     private HeadingData currentHeading = null;
 
+    private final RobotDrive robotDrive;
     // PRA private final MqttReconnect mqttReconnect;
 
 	/*
@@ -135,20 +134,44 @@ public class Robot extends SampleRobot {
         this.robotDrive.setExpiration(600.0);
 
         this.mqttExecutor.submit((Runnable) () -> {
+            final String url = format("tcp://%s:%d", Constants.MQTT_HOSTNAME, Constants.MQTT_PORT);
+
+            final MqttConnectOptions opts = new MqttConnectOptions();
+            opts.setCleanSession(true);
+            opts.setAutomaticReconnect(true);
+            opts.setConnectionTimeout(30);
+
             while (true) {
-                this.clientRef.set(Utils.createMqttClient(Constants.MQTT_HOSTNAME,
-                                                          Constants.MQTT_PORT,
-                                                          true,
-                                                          30,
-                                                          new BaseMqttCallback() {
-                                                              @Override
-                                                              public void connectComplete(boolean reconnect, String url) {
-                                                                  super.connectComplete(reconnect, url);
-                                                                  subscribeToTopics(getClient());
-                                                              }
-                                                          }));
-                if (this.clientRef.get() != null)
-                    break;
+                this.mqttClientRef.set(Utils.createMqttClient(url,
+                                                              new BaseMqttCallback() {
+                                                                  @Override
+                                                                  public void connectComplete(boolean reconnect, String url) {
+                                                                      super.connectComplete(reconnect, url);
+                                                                      subscribeToTopics(getMqttClient());
+                                                                  }
+                                                              }));
+                if (this.mqttClientRef.get() != null) {
+                    /*
+                    DisconnectedBufferOptions bufferOpts = new DisconnectedBufferOptions();
+                    bufferOpts.setBufferEnabled(true);
+                    bufferOpts.setBufferSize(100); // 100 message buffer
+                    bufferOpts.setDeleteOldestMessages(true); // Purge oldest messages when buffer is full
+                    bufferOpts.setPersistBuffer(false); // Do not buffer to disk
+                    this.mqttClientRef.get().setBufferOpts(bufferOpts);
+                    */
+
+                    try {
+                        System.out.println(format("Connecting to MQTT broker at %s...", url));
+                        this.mqttClientRef.get().connect(opts);
+                        System.out.println(format("Connected to %s", url));
+                        break;
+                    }
+                    catch (MqttException e) {
+                        System.out.println(format("Cannot connect to MQTT broker at %s [%s]", url, e.getMessage()));
+                        e.printStackTrace();
+                        this.mqttClientRef.set(null);
+                    }
+                }
 
                 System.out.println("Error connecting to MQTT broker");
                 Utils.sleepSecs(1);
@@ -357,8 +380,8 @@ public class Robot extends SampleRobot {
         return this.currentHeading;
     }
 
-    public MqttClient getClient() {
-        return this.clientRef.get();
+    public MqttClient getMqttClient() {
+        return this.mqttClientRef.get();
         // PRA return this.mqttReconnect.getMqttClient();
     }
 
@@ -473,11 +496,14 @@ public class Robot extends SampleRobot {
                 () -> {
                     try {
                         final String msg = sensorType.getMsgGenerator().getMesssage(Robot.this, desc);
-                        final MqttClient client = this.getClient();
+                        final MqttClient client = this.getMqttClient();
                         if (client != null)
                             client.publish(sensorType.getTopic(), new MqttMessage(msg.getBytes()));
                     }
-                    catch (Exception e) {
+                    catch (Throwable e) {
+                        System.out.println(format("Error in logMsg() [%s - %s]",
+                                                  e.getClass().getSimpleName(),
+                                                  e.getLocalizedMessage()));
                         e.printStackTrace();
                     }
                 });
@@ -490,9 +516,7 @@ public class Robot extends SampleRobot {
     }
 
     private void subscribeToTopics(final MqttClient client) {
-
         System.out.println("Subscribing to topics");
-
         try {
             client.subscribe(Constants.CAMERA_TOPIC,
                              (topic, msg) -> {
@@ -551,6 +575,9 @@ public class Robot extends SampleRobot {
                              });
         }
         catch (MqttException e) {
+            System.out.println(format("Error in subscribeToTopics() [%s - %s]",
+                                      e.getClass().getSimpleName(),
+                                      e.getLocalizedMessage()));
             e.printStackTrace();
         }
     }

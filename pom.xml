@@ -104,7 +104,7 @@
                             </descriptorRefs>
                             <archive>
                                 <manifest>
-                                    <mainClass>org.athenian.SysWatcher</mainClass>
+                                    <mainClass>usafirst.frc.team852.Robot</mainClass>
                                 </manifest>
                             </archive>
                         </configuration>

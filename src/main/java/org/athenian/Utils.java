@@ -1,10 +1,9 @@
 package org.athenian;
 
-import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+
+import static java.lang.String.format;
 
 public class Utils {
 
@@ -25,34 +24,50 @@ public class Utils {
         }
     }
 
-    public static MqttClient createMqttClient(final String mqtt_hostname,
-                                              final int mqtt_port,
-                                              final boolean reconnect,
-                                              int connectionTimeout,
+    public static MqttClient createMqttClient(final String url,
                                               final MqttCallbackExtended callback) {
 
         try {
-            final MqttClient client = new MqttClient(String.format("tcp://%s:%d", mqtt_hostname, mqtt_port),
-                                                     MqttClient.generateClientId(),
-                                                     new MemoryPersistence());
+            final MqttClient mqttClient = new MqttClient(url, MqttClient.generateClientId(), new MemoryPersistence());
             if (callback != null)
-                client.setCallback(callback);
+                mqttClient.setCallback(callback);
+            return mqttClient;
+        }
+        catch (MqttException e) {
+            System.out.println(format("Cannot create MQTT client [%s - %s]",
+                                      e.getClass().getSimpleName(),
+                                      e.getMessage()));
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static MqttAsyncClient createMqttAsyncClient(final String mqtt_hostname,
+                                                        final int mqtt_port,
+                                                        final boolean reconnect,
+                                                        int connectionTimeout,
+                                                        final MqttCallbackExtended callback) {
+
+        final String url = format("tcp://%s:%d", mqtt_hostname, mqtt_port);
+        try {
+            final MqttAsyncClient mqttClient = new MqttAsyncClient(url, MqttClient.generateClientId(), new MemoryPersistence());
+            if (callback != null)
+                mqttClient.setCallback(callback);
 
             final MqttConnectOptions opts = new MqttConnectOptions();
             opts.setCleanSession(true);
             opts.setAutomaticReconnect(reconnect);
             opts.setConnectionTimeout(connectionTimeout);
 
-            System.out.println(String.format("Connecting to MQTT server at %s:%d...", mqtt_hostname, mqtt_port));
-            client.connect(opts);
+            System.out.println(format("Connecting to MQTT server at %s...", url));
+            mqttClient.connect(opts);
 
-            System.out.println(String.format("Connected to %s:%d", mqtt_hostname, mqtt_port));
-            return client;
+            System.out.println(format("Connected to %s", url));
+            return mqttClient;
         }
         catch (MqttException e) {
+            System.out.println(format("Cannot connect to MQTT server at %s [%s]", url, e.getMessage()));
             e.printStackTrace();
-            System.out.println(String.format("Cannot connect to MQTT server at: %s:%d [%s]",
-                                             mqtt_hostname, mqtt_port, e.getMessage()));
             return null;
         }
     }
