@@ -8,7 +8,9 @@ public class BaseMqttCallback implements MqttCallback {
 
     @Override
     public void connectionLost(Throwable throwable) {
-        System.out.println("Connection to MQTT server lost");
+        System.out.println(String.format("Connection to MQTT server lost [%s - %s]",
+                                         throwable.getClass().getSimpleName(),
+                                         throwable.getMessage()));
     }
 
 

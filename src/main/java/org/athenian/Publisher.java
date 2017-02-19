@@ -26,7 +26,7 @@ public class Publisher {
             }
         };
 
-        final MqttClient client = Utils.createMqttClient(mqtt_hostname, mqtt_port, callback);
+        final MqttClient client = Utils.createMqttClient(mqtt_hostname, mqtt_port, true, 30, callback);
         if (client != null) {
             try {
                 for (int i = 0; i < cliArgs.mqtt_count; i++) {

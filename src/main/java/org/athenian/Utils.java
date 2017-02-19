@@ -27,6 +27,8 @@ public class Utils {
 
     public static MqttClient createMqttClient(final String mqtt_hostname,
                                               final int mqtt_port,
+                                              final boolean reconnect,
+                                              int connectionTimeout,
                                               final MqttCallback callback) {
 
         try {
@@ -37,8 +39,8 @@ public class Utils {
                 client.setCallback(callback);
 
             final MqttConnectOptions opts = new MqttConnectOptions();
-            opts.setAutomaticReconnect(true);
-            opts.setConnectionTimeout(60);
+            opts.setAutomaticReconnect(reconnect);
+            opts.setConnectionTimeout(connectionTimeout);
 
             System.out.println(String.format("Connecting to MQTT server at %s:%d...", mqtt_hostname, mqtt_port));
             client.connect(opts);

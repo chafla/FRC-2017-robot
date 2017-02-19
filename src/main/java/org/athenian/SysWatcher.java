@@ -16,7 +16,7 @@ public class SysWatcher {
         final String mqtt_hostname = Utils.getMqttHostname(cliArgs.mqtt_arg);
         final int mqtt_port = Utils.getMqttPort(cliArgs.mqtt_arg);
 
-        final MqttClient client = Utils.createMqttClient(mqtt_hostname, mqtt_port, new BaseMqttCallback());
+        final MqttClient client = Utils.createMqttClient(mqtt_hostname, mqtt_port, true, 30, new BaseMqttCallback());
         if (client != null) {
             try {
                 client.subscribe("$SYS/#",

@@ -5,8 +5,6 @@ import com.ctre.CANTalon.FeedbackDevice;
 import com.ctre.CANTalon.TalonControlMode;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
-import org.athenian.BaseMqttCallback;
-import org.athenian.Utils;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -94,6 +92,7 @@ public class Robot extends SampleRobot {
     private final ExecutorService logExecutor = Executors.newFixedThreadPool(4);
     private final ExecutorService mqttExecutor = Executors.newFixedThreadPool(1);
     private final Strategy strategy = new JvStrategy();
+
     private AtomicReference<MqttClient> clientRef = new AtomicReference<>();
     private CameraData currentCameraGear = null;
     private LidarData currentFrontLidar = null;
@@ -101,6 +100,8 @@ public class Robot extends SampleRobot {
     private LidarData currentLeftLidar = null;
     private LidarData currentRightLidar = null;
     private HeadingData currentHeading = null;
+
+    private final MqttReconnect mqttReconnect;
 
 	/*
      * Initialize a talon so that speed control will work.
@@ -131,15 +132,13 @@ public class Robot extends SampleRobot {
         // (No, didn't seem to work.)
         this.robotDrive.setExpiration(600.0);
 
-        // Set normal drive mode (don't use velocity PID)
-
+        /* PRA
         this.mqttExecutor.submit(() -> {
-            // Create the mqtt client and subscribe to messages from the broker.
-            // We modified createMqttClient in org.athenian.Utils.java so that it
-            // sets the option to automatically reconnect if the connection fails!
             while (true) {
                 final MqttClient client = Utils.createMqttClient(Constants.MQTT_HOSTNAME,
                                                                  Constants.MQTT_PORT,
+                                                                 true,
+                                                                 30,
                                                                  new BaseMqttCallback());
                 if (client != null) {
                     this.clientRef.set(client);
@@ -152,6 +151,11 @@ public class Robot extends SampleRobot {
             subscribeToTopics(getClient());
 
         });
+        */
+        this.mqttReconnect = new MqttReconnect(Constants.MQTT_HOSTNAME,
+                                               Constants.MQTT_PORT,
+                                               30, this::subscribeToTopics);
+        this.mqttReconnect.start();
     }
 
     private void initAllTalons() {
@@ -349,7 +353,8 @@ public class Robot extends SampleRobot {
     }
 
     public MqttClient getClient() {
-        return this.clientRef.get();
+        // PRA return this.clientRef.get();
+        return this.mqttReconnect.getMqttClient();
     }
 
     public void waitOnCameraGear(final long timeoutMillis) {
