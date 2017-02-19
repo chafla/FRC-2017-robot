@@ -117,7 +117,10 @@ public class Robot extends SampleRobot {
         // Looks like maximum RPM (i.e joystick full up) is 400 RPM.
 
         this.initAllTalons();
-        this.piston.set(DoubleSolenoid.Value.kOff);
+        this.piston.set(DoubleSolenoid.Value.kReverse);
+        this.climber.set(0);
+        this.rackAndPinion.set(0);
+
         this.robotDrive = new RobotDrive(this.frontLeft, this.rearLeft, this.frontRight, this.rearRight);
 
         // Motors on one side are reversed, so unless the red/black wires are
@@ -234,6 +237,7 @@ public class Robot extends SampleRobot {
      */
     @Override
     public void autonomous() {
+
         final CameraData cameraData = getCurrentCameraGear();
         final LidarData frontLidarData = getCurrentFrontLidar();
         final LidarData rearLidarData = getCurrentRearLidar();
@@ -303,9 +307,9 @@ public class Robot extends SampleRobot {
         boolean goRight = true;
 
         ring.set(Relay.Value.kForward);
+        this.piston.set(DoubleSolenoid.Value.kReverse);
 
         while (isOperatorControl() && isEnabled()) {
-
             // Use the joystick X axis for lateral movement, Y axis for forward
             // movement, and Z axis for rotation.
             // This sample does not use field-oriented drive, so the gyro input
@@ -328,14 +332,22 @@ public class Robot extends SampleRobot {
                 this.strategy.onXboxX(this);
             else if (this.xbox.getRawButton(XBOX_Y))
                 this.strategy.onXboxY(this);
-            else if (this.xbox.getRawButton(XBOX_LB))
-                this.strategy.onXboxLB(this);
-            else if (this.xbox.getRawButton(XBOX_RB))
-                this.strategy.onXboxRB(this);
+            else if (this.xbox.getRawButton(XBOX_LB)) {
+                while (this.xbox.getRawButton(XBOX_LB) && isEnabled())
+                    this.strategy.onXboxLB(this);
+                this.rackAndPinion.set(0);
+            } else if (this.xbox.getRawButton(XBOX_RB)) {
+                while (this.xbox.getRawButton(XBOX_RB) && isEnabled())
+                    this.strategy.onXboxRB(this);
+                this.rackAndPinion.set(0);
+            }
             else if (this.xbox.getRawButton(XBOX_Back))
                 this.strategy.onXboxBack(this);
-            else if (this.xbox.getRawButton(XBOX_Start))
-                this.strategy.onXboxStart(this);
+            else if (this.xbox.getRawButton(XBOX_Start)) {
+                while (this.xbox.getRawButton(XBOX_Start) && isEnabled())
+                    this.strategy.onXboxStart(this);
+                this.climber.set(0);
+            }
             else if (this.xbox.getRawButton(XBOX_LS))
                 this.strategy.onXboxLS(this);
             else if (this.xbox.getRawButton(XBOX_RS))
@@ -485,23 +497,21 @@ public class Robot extends SampleRobot {
     }
 
     public void moveRandPRight() {
-        if (!this.rightLimitSwitch.get()) { // consider switching to while
-            this.rackAndPinion.set(0.2); // may need to reverse
-            Timer.delay(0.01);
-            this.rackAndPinion.set(0);
-        }
+        if (!this.rightLimitSwitch.get())  // consider switching to while
+            this.rackAndPinion.set(0); // may need to reverse
+        else if (this.rightLimitSwitch.get() && this.rackAndPinion.get() == 0)
+            this.rackAndPinion.set(0.5);
     }
 
     public void moveRandPLeft() {
-        if (!this.leftLimitSwitch.get()) {
-            this.rackAndPinion.set(-0.2);
-            Timer.delay(0.01);
-            this.rackAndPinion.set(0);
-        }
+        if (!this.leftLimitSwitch.get())  // consider switching to while
+            this.rackAndPinion.set(0); // may need to reverse
+        else if (this.leftLimitSwitch.get() && this.rackAndPinion.get() == 0)
+            this.rackAndPinion.set(-0.5);
     }
 
     public void climb() {
-        climber.set(0.3);
+        climber.set(1);
     }
 
     public void logMsg(final SensorType sensorType, final String desc) {

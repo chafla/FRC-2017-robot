@@ -6,6 +6,8 @@ public interface Strategy {
 
     void reset();
 
+    void resetHeading();
+
     void onXboxA(Robot robot);
 
     void onXboxB(Robot robot);

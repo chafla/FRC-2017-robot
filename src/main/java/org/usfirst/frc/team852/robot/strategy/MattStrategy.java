@@ -14,6 +14,11 @@ public class MattStrategy implements Strategy {
 
     }
 
+    @Override
+    public void resetHeading() {
+
+    }
+
     public void onXboxY(final Robot robot) {
         centerWithLidar(robot);
     }

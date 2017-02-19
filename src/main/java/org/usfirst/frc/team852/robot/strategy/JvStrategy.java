@@ -22,8 +22,17 @@ public class JvStrategy implements Strategy {
         return headingFeedbackRef.get();
     }
 
+    private static final double THRESHHOLD_DEGREES = 1.5;
+    private static final double PID_CORRECTION_STRAIGHT = 0.01;
+    private static final double PID_CORRECTION_TURN = 0.1;
+
     @Override
     public void reset() {
+        this.headingFeedbackRef.set(null);
+    }
+
+    @Override
+    public void resetHeading() {
         this.headingFeedbackRef.set(null);
     }
 
@@ -33,7 +42,7 @@ public class JvStrategy implements Strategy {
         final CameraData cameraData = robot.getCurrentCameraGear();
 
         if (cameraData == null) {
-            System.out.println("Null camera data");
+            robot.logMsg(CAMERA_GEAR, "Null camera data");
             return;
         }
 
@@ -47,7 +56,7 @@ public class JvStrategy implements Strategy {
         final int wVal = cameraData.getWidth();
 
         if (xVal == -1)
-            System.out.println("No camera data");
+            robot.logMsg(CAMERA_GEAR, "No camera data");
         else if (xVal < (wVal / 2 - wVal * 0.1))
             robot.drive(.3, 0, 0, 0.1, CAMERA_GEAR, "turn left");
         else if (xVal > (wVal / 2 + wVal * 0.1))
@@ -63,12 +72,12 @@ public class JvStrategy implements Strategy {
         final LidarData rightLidarData = robot.getCurrentRightLidar();
 
         if (leftLidarData == null) {
-            System.out.println("Null left lidar data");
+            robot.logMsg(LIDAR_GEAR, "Null left lidar data");
             return;
         }
 
         if (rightLidarData == null) {
-            System.out.println("Null right lidar data");
+            robot.logMsg(LIDAR_GEAR, "Null right lidar data");
             return;
         }
 
@@ -88,7 +97,7 @@ public class JvStrategy implements Strategy {
         final int rVal = rightLidarData.getValOnce();
 
         if (lVal == -1 || rVal == -1)
-            System.out.println("Out of range");
+            robot.logMsg(LIDAR_GEAR, "Out of range");
         else if (lVal > 410 && rVal > 410)
             robot.drive(0, -0.3, 0, 0.1, LIDAR_GEAR, "forwards");
         else if (lVal < 390 && rVal < 390)
@@ -101,29 +110,19 @@ public class JvStrategy implements Strategy {
             robot.logMsg(LIDAR_GEAR, "centered by drive");
     }
 
-    private static final double THRESHHOLD_DEGREES = 1.5;
-    private static final double PID_CORRECTION_STRAIGHT = 0.01;
-    private static final double PID_CORRECTION_TURN = 0.1;
-
     @Override
     public void onXboxX(final Robot robot) {
         final HeadingData headingData = robot.getCurrentHeading();
 
         if (headingData == null) {
-            System.out.println("Null HeadingData");
+            robot.logMsg(HEADING, "Null heading data");
             return;
         }
 
 
         if (headingData.isInvalid()) {
-            System.out.println(headingData.getAlreadyReadMsg());
-            /*
-            if (!robot.waitOnHeading(0)) {
-                System.out.println(headingData.getTimedOutMsg());
-                return;
-            }
-            */
-            robot.drive(0, -0.2, 0, 0.1, HEADING, "old data - go straight");
+            robot.logMsg(HEADING, headingData.getAlreadyReadMsg());
+            robot.drive(0, -0.2, 0, 0.1, HEADING, "old data -> go straight");
             return;
         }
 
@@ -139,13 +138,11 @@ public class JvStrategy implements Strategy {
         final String command;
         if (errorDegrees > THRESHHOLD_DEGREES) {
             // veered right, turn left, turnSpeed will be no less than -1
-            System.out.println("greater");
             turnSpeed = Math.max(-errorDegrees * PID_CORRECTION_STRAIGHT, -0.25);
             command = "Forward and counter-clockwise";
 
         } else if (errorDegrees < (THRESHHOLD_DEGREES * -1)) {
             // veered left, turn right, turnSpeed will be no more 1
-            System.out.println("fewer");
             turnSpeed = Math.min(-errorDegrees * PID_CORRECTION_STRAIGHT, 0.25);
             command = "Forward and clockwise";
         } else {
@@ -164,12 +161,12 @@ public class JvStrategy implements Strategy {
         final LidarData rightLidarData = robot.getCurrentRightLidar();
 
         if (leftLidarData == null) {
-            System.out.println("Null left lidar data");
+            robot.logMsg(LIDAR_GEAR, "Null left lidar data");
             return;
         }
 
         if (rightLidarData == null) {
-            System.out.println("Null right lidar data");
+            robot.logMsg(LIDAR_GEAR, "Null right lidar data");
             return;
         }
 
@@ -189,7 +186,7 @@ public class JvStrategy implements Strategy {
         final int rVal = rightLidarData.getValOnce();
 
         if (leftLidarData.getValOnce() == -1 || rightLidarData.getValOnce() == -1) {
-            System.out.println("Out of range");
+            robot.logMsg(LIDAR_GEAR, "Out of range");
         } else if (lVal > rVal + 10) {
             if (lVal > 320 && rVal > 320)
                 robot.drive(0, -0.3, -0.25, 0.1, LIDAR_GEAR, "clockwise and forward");
@@ -214,22 +211,20 @@ public class JvStrategy implements Strategy {
 
     @Override
     public void onXboxLB(final Robot robot) {
-        robot.pushGear();
-        robot.retractPiston();
+        robot.moveRandPLeft();
     }
 
     @Override
     public void onXboxRB(final Robot robot) {
         robot.moveRandPRight();
-        //robot.moveRandPLeft();
         /*final CameraData cameraData = robot.getCurrentCameraGear();
 
         if (cameraData == null) {
-            System.out.println("Null CameraData");
+            robot.logMsg(CAMERA_GEAR, "Null camera data");
             return;
         }
         if (cameraData.getTimestamp() <= robot.getCameraLastTime()) {
-            System.out.println("Stale CameraData");
+            robot.logMsg(CAMERA_GEAR, "Stale camera data");
             return;
         } else {
             robot.updateCameraLastTime();
@@ -240,7 +235,7 @@ public class JvStrategy implements Strategy {
         final int error = 3;
 
         if (xVal == -1)
-            System.out.println("No camera data");
+            robot.logMsg(CAMERA_GEAR, "No camera data");
         else if (xVal < (wVal / 2) - error)
             robot.moveRandPRight();
         else if (xVal > (wVal / 2) + error)
@@ -254,7 +249,7 @@ public class JvStrategy implements Strategy {
         final HeadingData headingData = robot.getCurrentHeading();
 
         if (headingData == null) {
-            System.out.println("Null heading data");
+            robot.logMsg(HEADING, "Null heading data");
             return;
         }
 
@@ -295,17 +290,16 @@ public class JvStrategy implements Strategy {
 
     @Override
     public void onXboxStart(Robot robot) {
-        while (robot.isEnabled())
-            robot.climb();
+        robot.climb();
     }
 
     @Override
     public void onXboxLS(Robot robot) {
-        headingFeedbackRef.set(null);
+        robot.retractPiston();
     }
 
     @Override
     public void onXboxRS(Robot robot) {
-        robot.drive(0, -0.5, 0, 0.1, HEADING, "straight");
+        robot.pushGear();
     }
 }
