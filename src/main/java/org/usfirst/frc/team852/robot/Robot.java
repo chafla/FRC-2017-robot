@@ -5,6 +5,8 @@ import com.ctre.CANTalon.FeedbackDevice;
 import com.ctre.CANTalon.TalonControlMode;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
+import org.athenian.BaseMqttCallback;
+import org.athenian.Utils;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -101,7 +103,7 @@ public class Robot extends SampleRobot {
     private LidarData currentRightLidar = null;
     private HeadingData currentHeading = null;
 
-    private final MqttReconnect mqttReconnect;
+    // PRA private final MqttReconnect mqttReconnect;
 
 	/*
      * Initialize a talon so that speed control will work.
@@ -132,30 +134,33 @@ public class Robot extends SampleRobot {
         // (No, didn't seem to work.)
         this.robotDrive.setExpiration(600.0);
 
-        /* PRA
-        this.mqttExecutor.submit(() -> {
+        this.mqttExecutor.submit((Runnable) () -> {
             while (true) {
-                final MqttClient client = Utils.createMqttClient(Constants.MQTT_HOSTNAME,
-                                                                 Constants.MQTT_PORT,
-                                                                 true,
-                                                                 30,
-                                                                 new BaseMqttCallback());
-                if (client != null) {
-                    this.clientRef.set(client);
+                this.clientRef.set(Utils.createMqttClient(Constants.MQTT_HOSTNAME,
+                                                          Constants.MQTT_PORT,
+                                                          true,
+                                                          30,
+                                                          new BaseMqttCallback() {
+                                                              @Override
+                                                              public void connectComplete(boolean reconnect, String url) {
+                                                                  super.connectComplete(reconnect, url);
+                                                                  subscribeToTopics(getClient());
+                                                              }
+                                                          }));
+                if (this.clientRef.get() != null)
                     break;
-                }
+
                 System.out.println("Error connecting to MQTT broker");
                 Utils.sleepSecs(1);
             }
-
-            subscribeToTopics(getClient());
-
         });
-        */
+
+        /* PRA
         this.mqttReconnect = new MqttReconnect(Constants.MQTT_HOSTNAME,
                                                Constants.MQTT_PORT,
                                                30, this::subscribeToTopics);
         this.mqttReconnect.start();
+        */
     }
 
     private void initAllTalons() {
@@ -353,8 +358,8 @@ public class Robot extends SampleRobot {
     }
 
     public MqttClient getClient() {
-        // PRA return this.clientRef.get();
-        return this.mqttReconnect.getMqttClient();
+        return this.clientRef.get();
+        // PRA return this.mqttReconnect.getMqttClient();
     }
 
     public void waitOnCameraGear(final long timeoutMillis) {

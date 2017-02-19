@@ -17,7 +17,7 @@ public class Publisher {
         final String mqtt_hostname = "mqtt-turtle.local";
         final int mqtt_port = 1883;
 
-        final MqttCallback callback = new BaseMqttCallback() {
+        final MqttCallbackExtended callback = new BaseMqttCallback() {
             @Override
             public void deliveryComplete(IMqttDeliveryToken token) {
                 super.deliveryComplete(token);

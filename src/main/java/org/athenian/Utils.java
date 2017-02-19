@@ -1,6 +1,6 @@
 package org.athenian;
 
-import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -29,7 +29,7 @@ public class Utils {
                                               final int mqtt_port,
                                               final boolean reconnect,
                                               int connectionTimeout,
-                                              final MqttCallback callback) {
+                                              final MqttCallbackExtended callback) {
 
         try {
             final MqttClient client = new MqttClient(String.format("tcp://%s:%d", mqtt_hostname, mqtt_port),
@@ -39,6 +39,7 @@ public class Utils {
                 client.setCallback(callback);
 
             final MqttConnectOptions opts = new MqttConnectOptions();
+            opts.setCleanSession(true);
             opts.setAutomaticReconnect(reconnect);
             opts.setConnectionTimeout(connectionTimeout);
 
