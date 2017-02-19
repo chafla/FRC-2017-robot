@@ -2,12 +2,12 @@ package org.usfirst.frc.team852.robot.data;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class GenericData {
+public abstract class GenericData {
 
     private AtomicBoolean invalid = new AtomicBoolean(false);
     private DataType dataType;
 
-    public GenericData(final DataType dataType) {
+    protected GenericData(final DataType dataType) {
         this.dataType = dataType;
     }
 
@@ -15,7 +15,7 @@ public class GenericData {
         return this.invalid.get();
     }
 
-    public void setInvalid() {
+    protected void setInvalid() {
         System.out.println(this.dataType.getUpdateMsg());
         this.invalid.set(true);
     }
