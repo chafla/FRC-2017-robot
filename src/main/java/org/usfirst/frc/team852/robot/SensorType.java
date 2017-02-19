@@ -4,22 +4,22 @@ package org.usfirst.frc.team852.robot;
 public enum SensorType {
     CAMERA_GEAR(Constants.CAMERA_GEAR_LOGGING_POSITION_TOPIC,
                 (robot, desc) -> String.format("%d - %s",
-                                               robot.getCurrentCameraGear().getX(),
+                                               robot.getCurrentCameraGear().getValOnce(),
                                                desc)),
 
     LIDAR_GEAR(Constants.LIDAR_GEAR_LOGGING_POSITION_TOPIC,
                (robot, logMsg) ->
                        String.format("Left: %dmm Right: %dmm - %s",
-                                     robot.getCurrentLeftLidar().getVal(),
-                                     robot.getCurrentRightLidar().getVal(),
+                                     robot.getCurrentLeftLidar().getValOnce(),
+                                     robot.getCurrentRightLidar().getValOnce(),
                                      logMsg)),
 
     HEADING(Constants.HEADING_LOGGING_POSITION_TOPIC,
             (robot, logMsg) ->
                     String.format("Heading: %f Front: %dcm Rear: %dcm - %s",
-                                  robot.getCurrentHeading().getDegree(),
-                            robot.getCurrentFrontLidar() != null ? robot.getCurrentFrontLidar().getVal() : -1,
-                            robot.getCurrentRearLidar() != null ? robot.getCurrentRearLidar().getVal() : -1,
+                                  robot.getCurrentHeading().getDegreesOnce(),
+                                  robot.getCurrentFrontLidar() != null ? robot.getCurrentFrontLidar().getValOnce() : -1,
+                                  robot.getCurrentRearLidar() != null ? robot.getCurrentRearLidar().getValOnce() : -1,
                                   logMsg)
     );
 

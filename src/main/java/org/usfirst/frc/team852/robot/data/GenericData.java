@@ -4,19 +4,27 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GenericData {
 
-    private final long timestamp = System.currentTimeMillis();
+    private AtomicBoolean invalid = new AtomicBoolean(false);
+    private DataType dataType;
 
-    private AtomicBoolean dataRead = new AtomicBoolean(false);
-
-    public long getTimestamp() {
-        return timestamp;
+    public GenericData(final DataType dataType) {
+        this.dataType = dataType;
     }
 
-    public boolean isDataRead() {
-        return dataRead.get();
+    public boolean isInvalid() {
+        return this.invalid.get();
     }
 
-    public void setDataRead() {
-        this.dataRead.set(true);
+    public void setInvalid() {
+        System.out.println(this.dataType.getUpdateMsg());
+        this.invalid.set(true);
+    }
+
+    public String getAlreadyReadMsg() {
+        return this.dataType.getAlreadyReadMsg();
+    }
+
+    public String getTimedOutMsg() {
+        return this.dataType.getTimedOutMsg();
     }
 }

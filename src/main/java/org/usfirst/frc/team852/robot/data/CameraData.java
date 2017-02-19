@@ -1,20 +1,22 @@
 package org.usfirst.frc.team852.robot.data;
 
 public class CameraData extends GenericData {
-    private final int x;
+    private final int val;
     private final int width;
 
-    public CameraData(int x, int width) {
-        this.x = x;
+    public CameraData(final DataType dataType, final int val, final int width) {
+        super(dataType);
+        this.val = val;
         this.width = width;
     }
 
-    public int getX() {
-        return x;
+    public int getValOnce() {
+        this.setInvalid();
+        return this.val;
     }
 
     public int getWidth() {
-        return width;
+        return this.width;
     }
 
 }

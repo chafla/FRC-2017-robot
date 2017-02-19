@@ -82,8 +82,8 @@ public class MattStrategy implements Strategy {
             return;
 
         } else {
-            leftMm = leftLidar.getVal();
-            rightMm = rightLidar.getVal();
+            leftMm = leftLidar.getValOnce();
+            rightMm = rightLidar.getValOnce();
         }
         // If value is out of range, rotate until we get valid data
         // Note: This might cause issues if we get random OOR vals
@@ -147,8 +147,8 @@ public class MattStrategy implements Strategy {
             this.centerWithLidar(robot);
         } else {
 
-            int left = leftLidar.getVal();
-            int right = rightLidar.getVal();
+            int left = leftLidar.getValOnce();
+            int right = rightLidar.getValOnce();
             int movementDir;
 
             if ((Math.abs(left - dist) < TOLERANCE) && (Math.abs(right - dist) < TOLERANCE)) {

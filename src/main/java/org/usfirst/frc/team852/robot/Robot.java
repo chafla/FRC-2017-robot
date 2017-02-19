@@ -12,6 +12,7 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.usfirst.frc.team852.robot.data.CameraData;
+import org.usfirst.frc.team852.robot.data.DataType;
 import org.usfirst.frc.team852.robot.data.HeadingData;
 import org.usfirst.frc.team852.robot.data.LidarData;
 import org.usfirst.frc.team852.robot.strategy.JvStrategy;
@@ -88,17 +89,11 @@ public class Robot extends SampleRobot {
     private final AtomicReference<LidarData> rearLidarRef = new AtomicReference<>();
     private final AtomicReference<LidarData> leftLidarRef = new AtomicReference<>();
     private final AtomicReference<LidarData> rightLidarRef = new AtomicReference<>();
-    public final AtomicReference<HeadingData> headingRef = new AtomicReference<>();
+    private final AtomicReference<HeadingData> headingRef = new AtomicReference<>();
     private final RobotDrive robotDrive;
     private final ExecutorService logExecutor = Executors.newFixedThreadPool(4);
     private final ExecutorService mqttExecutor = Executors.newFixedThreadPool(1);
     private final Strategy strategy = new JvStrategy();
-    private long cameraLastTime = 0;
-    private long lidarFrontLastTime = 0;
-    private long lidarRearLastTime = 0;
-    private long lidarLeftLastTime = 0;
-    private long lidarRightLastTime = 0;
-    private long headingLastTime = 0;
     private AtomicReference<MqttClient> clientRef = new AtomicReference<>();
     private CameraData currentCameraGear = null;
     private LidarData currentFrontLidar = null;
@@ -351,56 +346,86 @@ public class Robot extends SampleRobot {
         return this.currentHeading;
     }
 
-    public long getCameraLastTime() {
-        return this.cameraLastTime;
-    }
-
-    public long getLidarFrontLastTime() {
-        return this.lidarFrontLastTime;
-    }
-
-    public long getLidarRearLastTime() {
-        return this.lidarRearLastTime;
-    }
-
-    public long getLidarLeftLastTime() {
-        return this.lidarLeftLastTime;
-    }
-
-    public long getLidarRightLastTime() {
-        return this.lidarRightLastTime;
-    }
-
-    public long getHeadingLastTime() {
-        return this.headingLastTime;
-    }
-
-    public void updateCameraLastTime() {
-        this.cameraLastTime = System.currentTimeMillis();
-    }
-
-    public void updateLidarFrontLastTime() {
-        this.lidarFrontLastTime = System.currentTimeMillis();
-    }
-
-    public void updateLidarRearLastTime() {
-        this.lidarRearLastTime = System.currentTimeMillis();
-    }
-
-    public void updateLidarLeftLastTime() {
-        this.lidarLeftLastTime = System.currentTimeMillis();
-    }
-
-    public void updateLidarRightLastTime() {
-        this.lidarRightLastTime = System.currentTimeMillis();
-    }
-
-    public void updateHeadingLastTime() {
-        this.headingLastTime = System.currentTimeMillis();
-    }
-
     public MqttClient getClient() {
         return this.clientRef.get();
+    }
+
+    public boolean waitOnCameraGear(final long timeoutMillis) {
+        synchronized (this.cameraGearRef) {
+            try {
+                this.cameraGearRef.wait(timeoutMillis);
+                return true;
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+    }
+
+    public boolean waitOnFrontLidar(final long timeoutMillis) {
+        synchronized (this.frontLidarRef) {
+            try {
+                this.frontLidarRef.wait(timeoutMillis);
+                return true;
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+    }
+
+    public boolean waitOnRearLidar(final long timeoutMillis) {
+        synchronized (this.rearLidarRef) {
+            try {
+                this.rearLidarRef.wait(timeoutMillis);
+                return true;
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+    }
+
+    public boolean waitOnLeftLidar(final long timeoutMillis) {
+        synchronized (this.leftLidarRef) {
+            try {
+                this.leftLidarRef.wait(timeoutMillis);
+                return true;
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+    }
+
+    public boolean waitOnRightLidar(final long timeoutMillis) {
+        synchronized (this.rightLidarRef) {
+            try {
+                this.rightLidarRef.wait(timeoutMillis);
+                return true;
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+    }
+
+    public boolean waitOnHeading(final long timeoutMillis) {
+        synchronized (this.headingRef) {
+            try {
+                this.headingRef.wait(timeoutMillis);
+                return true;
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
     }
 
     public void drive(final double x,
@@ -416,26 +441,26 @@ public class Robot extends SampleRobot {
     }
 
     public void pushGear() {
-        piston.set(DoubleSolenoid.Value.kForward);
+        this.piston.set(DoubleSolenoid.Value.kForward);
     }
 
     public void retractPiston() {
-        piston.set(DoubleSolenoid.Value.kReverse);
+        this.piston.set(DoubleSolenoid.Value.kReverse);
     }
 
     public void moveRandPRight() {
-        if (!rightLimitSwitch.get()) { // consider switching to while
-            rackAndPinion.set(0.2); // may need to reverse
+        if (!this.rightLimitSwitch.get()) { // consider switching to while
+            this.rackAndPinion.set(0.2); // may need to reverse
             Timer.delay(0.01);
-            rackAndPinion.set(0);
+            this.rackAndPinion.set(0);
         }
     }
 
     public void moveRandPLeft() {
-        if (!leftLimitSwitch.get()) {
-            rackAndPinion.set(-0.2);
+        if (!this.leftLimitSwitch.get()) {
+            this.rackAndPinion.set(-0.2);
             Timer.delay(0.01);
-            rackAndPinion.set(0);
+            this.rackAndPinion.set(0);
         }
     }
 
@@ -451,7 +476,8 @@ public class Robot extends SampleRobot {
                         final MqttClient client = this.getClient();
                         if (client != null)
                             client.publish(sensorType.getTopic(), new MqttMessage(msg.getBytes()));
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e) {
                         e.printStackTrace();
                     }
                 });
@@ -473,39 +499,54 @@ public class Robot extends SampleRobot {
                                  final String[] info = new String(msg.getPayload()).split(":");
                                  final int currloc = Integer.parseInt(info[0]);
                                  final int width = Integer.parseInt(info[1]);
-                                 cameraGearRef.set(new CameraData(currloc, width));
+                                 this.cameraGearRef.set(new CameraData(DataType.CameraGear, currloc, width));
+                                 synchronized (this.cameraGearRef) {
+                                     this.cameraGearRef.notifyAll();
+                                 }
                              });
 
             client.subscribe(Constants.FRONT_LIDAR_TOPIC,
                              (topic, msg) -> {
                                  final int dist = Integer.parseInt(new String(msg.getPayload()));
-                                 frontLidarRef.set(new LidarData(dist));
+                                 this.frontLidarRef.set(new LidarData(DataType.FrontLidar, dist));
+                                 synchronized (this.frontLidarRef) {
+                                     this.frontLidarRef.notifyAll();
+                                 }
                              });
 
             client.subscribe(Constants.REAR_LIDAR_TOPIC,
                              (topic, msg) -> {
                                  final int dist = Integer.parseInt(new String(msg.getPayload()));
-                                 rearLidarRef.set(new LidarData(dist));
+                                 this.rearLidarRef.set(new LidarData(DataType.RearLidar, dist));
+                                 synchronized (this.rearLidarRef) {
+                                     this.rearLidarRef.notifyAll();
+                                 }
                              });
 
             client.subscribe(Constants.LEFT_LIDAR_TOPIC,
                              (topic, msg) -> {
                                  final int dist = Integer.parseInt(new String(msg.getPayload()));
-                                 leftLidarRef.set(new LidarData(dist));
+                                 this.leftLidarRef.set(new LidarData(DataType.LeftLidar, dist));
+                                 synchronized (this.leftLidarRef) {
+                                     this.leftLidarRef.notifyAll();
+                                 }
                              });
 
             client.subscribe(Constants.RIGHT_LIDAR_TOPIC,
                              (topic, msg) -> {
                                  final int dist = Integer.parseInt(new String(msg.getPayload()));
-                                 rightLidarRef.set(new LidarData(dist));
+                                 this.rightLidarRef.set(new LidarData(DataType.RightLidar, dist));
+                                 synchronized (this.rightLidarRef) {
+                                     this.rightLidarRef.notifyAll();
+                                 }
                              });
 
             client.subscribe(Constants.HEADING_TOPIC,
                              (topic, msg) -> {
                                  final double degree = Double.parseDouble(new String(msg.getPayload()));
-                                 headingRef.set(new HeadingData(degree));
-                                 synchronized (headingRef) {
-                                     headingRef.notify();
+                                 this.headingRef.set(new HeadingData(degree));
+                                 synchronized (this.headingRef) {
+                                     this.headingRef.notifyAll();
                                  }
                              });
         }
@@ -537,9 +578,7 @@ public class Robot extends SampleRobot {
     }
 
     public boolean getXboxButton(XButton button) {
-
         return xbox.getRawButton(button.get());
-
     }
 
 }

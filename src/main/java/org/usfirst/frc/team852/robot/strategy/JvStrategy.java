@@ -27,24 +27,25 @@ public class JvStrategy implements Strategy {
         this.headingFeedbackRef.set(null);
     }
 
-
     // consider renaming these methods
     @Override
     public void onXboxA(final Robot robot) {
         final CameraData cameraData = robot.getCurrentCameraGear();
 
         if (cameraData == null) {
-            System.out.println("Null CameraData");
+            System.out.println("Null camera data");
             return;
-        }
-        if (cameraData.getTimestamp() <= robot.getCameraLastTime()) {
-            System.out.println("Stale CameraData");
-            return;
-        } else {
-            robot.updateCameraLastTime();
         }
 
-        final int xVal = cameraData.getX();
+        if (cameraData.isInvalid()) {
+            System.out.println(cameraData.getAlreadyReadMsg());
+            if (!robot.waitOnCameraGear(0)) {
+                System.out.println(cameraData.getTimedOutMsg());
+                return;
+            }
+        }
+
+        final int xVal = cameraData.getValOnce();
         final int wVal = cameraData.getWidth();
 
         if (xVal == -1)
@@ -63,23 +64,34 @@ public class JvStrategy implements Strategy {
         final LidarData leftLidarData = robot.getCurrentLeftLidar();
         final LidarData rightLidarData = robot.getCurrentRightLidar();
 
-        if (leftLidarData == null || rightLidarData == null) {
-            System.out.println("Null Short LidarData");
+        if (leftLidarData == null) {
+            System.out.println("Null left lidar data");
             return;
         }
 
-        if (leftLidarData.getTimestamp() <= robot.getLidarLeftLastTime()
-                || rightLidarData.getTimestamp() <= robot.getLidarRightLastTime()) {
-            System.out.println("Stale Short LidarData");
+        if (rightLidarData == null) {
+            System.out.println("Null right lidar data");
             return;
-        } else {
-            robot.updateLidarLeftLastTime();
-            robot.updateLidarRightLastTime();
         }
 
-        final int lVal = leftLidarData.getVal();
-        final int rVal = rightLidarData.getVal();
+        if (leftLidarData.isInvalid()) {
+            System.out.println(leftLidarData.getAlreadyReadMsg());
+            if (!robot.waitOnLeftLidar(0)) {
+                System.out.println(leftLidarData.getTimedOutMsg());
+                return;
+            }
+        }
 
+        if (rightLidarData.isInvalid()) {
+            System.out.println(rightLidarData.getAlreadyReadMsg());
+            if (!robot.waitOnRightLidar(0)) {
+                System.out.println(rightLidarData.getTimedOutMsg());
+                return;
+            }
+        }
+
+        final int lVal = leftLidarData.getValOnce();
+        final int rVal = rightLidarData.getValOnce();
 
         if (lVal == -1 || rVal == -1)
             System.out.println("Out of range");
@@ -103,29 +115,25 @@ public class JvStrategy implements Strategy {
     public void onXboxX(final Robot robot) {
         final HeadingData headingData = robot.getCurrentHeading();
 
-        /*if (headingData == null) {
+        if (headingData == null) {
             System.out.println("Null HeadingData");
             return;
         }
-        synchronized (robot.headingRef) {
-            try {
-                robot.headingRef.wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+
+
+        if (headingData.isInvalid()) {
+            System.out.println(headingData.getAlreadyReadMsg());
+            /*
+            if (!robot.waitOnHeading(0)) {
+                System.out.println(headingData.getTimedOutMsg());
+                return;
             }
-        }*/
-
-
-        if (headingData.isDataRead()) {
-            System.out.println("Heading data already read");
+            */
             robot.drive(0, -0.2, 0, 0.1, HEADING, "old data - go straight");
             return;
-        } else {
-            System.out.println("Updated data read");
-            headingData.setDataRead();
         }
 
-        final double degrees = headingData.getDegree();
+        final double degrees = headingData.getDegreesOnce();
 
         // This will be set the first time through
         if (this.getHeadingFeedback() == null)
@@ -161,23 +169,36 @@ public class JvStrategy implements Strategy {
         final LidarData leftLidarData = robot.getCurrentLeftLidar();
         final LidarData rightLidarData = robot.getCurrentRightLidar();
 
-        if (leftLidarData == null || rightLidarData == null) {
-            System.out.println("Null Short LidarData");
+        if (leftLidarData == null) {
+            System.out.println("Null left lidar data");
             return;
         }
-        if (leftLidarData.getTimestamp() <= robot.getLidarLeftLastTime()
-                || rightLidarData.getTimestamp() <= robot.getLidarRightLastTime()) {
-            System.out.println("Stale Short LidarData");
+
+        if (rightLidarData == null) {
+            System.out.println("Null right lidar data");
             return;
-        } else {
-            robot.updateLidarLeftLastTime();
-            robot.updateLidarRightLastTime();
         }
 
-        final int lVal = leftLidarData.getVal();
-        final int rVal = rightLidarData.getVal();
+        if (leftLidarData.isInvalid()) {
+            System.out.println(leftLidarData.getAlreadyReadMsg());
+            if (!robot.waitOnLeftLidar(0)) {
+                System.out.println(leftLidarData.getTimedOutMsg());
+                return;
+            }
+        }
 
-        if (leftLidarData.getVal() == -1 || rightLidarData.getVal() == -1) {
+        if (rightLidarData.isInvalid()) {
+            System.out.println(rightLidarData.getAlreadyReadMsg());
+            if (!robot.waitOnRightLidar(0)) {
+                System.out.println(rightLidarData.getTimedOutMsg());
+                return;
+            }
+        }
+
+        final int lVal = leftLidarData.getValOnce();
+        final int rVal = rightLidarData.getValOnce();
+
+        if (leftLidarData.getValOnce() == -1 || rightLidarData.getValOnce() == -1) {
             System.out.println("Out of range");
         } else if (lVal > rVal + 10) {
             if (lVal > 320 && rVal > 320)
@@ -243,38 +264,19 @@ public class JvStrategy implements Strategy {
         final HeadingData headingData = robot.getCurrentHeading();
 
         if (headingData == null) {
-            System.out.println("Null HeadingData");
+            System.out.println("Null heading data");
             return;
         }
 
-
-        synchronized (robot.headingRef) {
-            try {
-                robot.headingRef.wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        if (headingData.isInvalid()) {
+            System.out.println(headingData.getAlreadyReadMsg());
+            if (!robot.waitOnHeading(0)) {
+                System.out.println(headingData.getTimedOutMsg());
+                return;
             }
         }
 
-
-        if (headingData.isDataRead()) {
-            System.out.println("Heading data already read");
-            return;
-        } else {
-            System.out.println("Updated data read");
-            headingData.setDataRead();
-        }
-/*
-        if (headingData.getTimestamp() < robot.getHeadingLastTime()) {
-            System.out.println(String.format("Stale HeadingData Timestamp: %d Last time: %d",
-                    headingData.getTimestamp(), robot.getHeadingLastTime()));
-            return;
-        } else {
-            robot.updateHeadingLastTime();
-            System.out.println("Updated time");
-        }
-*/
-        final double degrees = headingData.getDegree();
+        final double degrees = headingData.getDegreesOnce();
         final double turn = 45;
 
         // This will be set the first time through
