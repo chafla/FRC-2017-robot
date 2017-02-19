@@ -350,80 +350,68 @@ public class Robot extends SampleRobot {
         return this.clientRef.get();
     }
 
-    public boolean waitOnCameraGear(final long timeoutMillis) {
+    public void waitOnCameraGear(final long timeoutMillis) {
         synchronized (this.cameraGearRef) {
             try {
                 this.cameraGearRef.wait(timeoutMillis);
-                return true;
             }
             catch (InterruptedException e) {
                 e.printStackTrace();
-                return false;
             }
         }
     }
 
-    public boolean waitOnFrontLidar(final long timeoutMillis) {
+    public void waitOnFrontLidar(final long timeoutMillis) {
         synchronized (this.frontLidarRef) {
             try {
                 this.frontLidarRef.wait(timeoutMillis);
-                return true;
             }
             catch (InterruptedException e) {
                 e.printStackTrace();
-                return false;
             }
         }
     }
 
-    public boolean waitOnRearLidar(final long timeoutMillis) {
+    public void waitOnRearLidar(final long timeoutMillis) {
         synchronized (this.rearLidarRef) {
             try {
                 this.rearLidarRef.wait(timeoutMillis);
-                return true;
             }
             catch (InterruptedException e) {
                 e.printStackTrace();
-                return false;
             }
         }
     }
 
-    public boolean waitOnLeftLidar(final long timeoutMillis) {
+    public void waitOnLeftLidar(final long timeoutMillis) {
         synchronized (this.leftLidarRef) {
             try {
                 this.leftLidarRef.wait(timeoutMillis);
-                return true;
             }
             catch (InterruptedException e) {
                 e.printStackTrace();
-                return false;
             }
         }
     }
 
-    public boolean waitOnRightLidar(final long timeoutMillis) {
+    public void waitOnRightLidar(final long timeoutMillis) {
         synchronized (this.rightLidarRef) {
             try {
                 this.rightLidarRef.wait(timeoutMillis);
-                return true;
             }
             catch (InterruptedException e) {
                 e.printStackTrace();
-                return false;
             }
         }
     }
 
-    public boolean waitOnHeading(final long timeoutMillis) {
+    public void waitOnHeading(final long timeoutMillis) {
         synchronized (this.headingRef) {
             try {
                 this.headingRef.wait(timeoutMillis);
-                return true;
             }
             catch (InterruptedException e) {
                 e.printStackTrace();
-                return false;
             }
         }
     }

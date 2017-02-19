@@ -39,10 +39,8 @@ public class JvStrategy implements Strategy {
 
         if (cameraData.isInvalid()) {
             System.out.println(cameraData.getAlreadyReadMsg());
-            if (!robot.waitOnCameraGear(0)) {
-                System.out.println(cameraData.getTimedOutMsg());
-                return;
-            }
+            robot.waitOnCameraGear(0);
+            return;
         }
 
         final int xVal = cameraData.getValOnce();
@@ -76,18 +74,14 @@ public class JvStrategy implements Strategy {
 
         if (leftLidarData.isInvalid()) {
             System.out.println(leftLidarData.getAlreadyReadMsg());
-            if (!robot.waitOnLeftLidar(0)) {
-                System.out.println(leftLidarData.getTimedOutMsg());
-                return;
-            }
+            robot.waitOnLeftLidar(0);
+            return;
         }
 
         if (rightLidarData.isInvalid()) {
             System.out.println(rightLidarData.getAlreadyReadMsg());
-            if (!robot.waitOnRightLidar(0)) {
-                System.out.println(rightLidarData.getTimedOutMsg());
-                return;
-            }
+            robot.waitOnRightLidar(0);
+            return;
         }
 
         final int lVal = leftLidarData.getValOnce();
@@ -181,18 +175,14 @@ public class JvStrategy implements Strategy {
 
         if (leftLidarData.isInvalid()) {
             System.out.println(leftLidarData.getAlreadyReadMsg());
-            if (!robot.waitOnLeftLidar(0)) {
-                System.out.println(leftLidarData.getTimedOutMsg());
-                return;
-            }
+            robot.waitOnLeftLidar(0);
+            return;
         }
 
         if (rightLidarData.isInvalid()) {
             System.out.println(rightLidarData.getAlreadyReadMsg());
-            if (!robot.waitOnRightLidar(0)) {
-                System.out.println(rightLidarData.getTimedOutMsg());
-                return;
-            }
+            robot.waitOnRightLidar(0);
+            return;
         }
 
         final int lVal = leftLidarData.getValOnce();
@@ -270,10 +260,8 @@ public class JvStrategy implements Strategy {
 
         if (headingData.isInvalid()) {
             System.out.println(headingData.getAlreadyReadMsg());
-            if (!robot.waitOnHeading(0)) {
-                System.out.println(headingData.getTimedOutMsg());
-                return;
-            }
+            robot.waitOnHeading(0);
+            return;
         }
 
         final double degrees = headingData.getDegreesOnce();

@@ -23,8 +23,4 @@ public abstract class GenericData {
     public String getAlreadyReadMsg() {
         return this.dataType.getAlreadyReadMsg();
     }
-
-    public String getTimedOutMsg() {
-        return this.dataType.getTimedOutMsg();
-    }
 }

@@ -18,5 +18,4 @@ public class CameraData extends GenericData {
     public int getWidth() {
         return this.width;
     }
-
 }

@@ -10,12 +10,10 @@ public enum DataType {
 
     private final String updateMsg;
     private final String alreadyReadMsg;
-    private final String timedOutMsg;
 
     DataType(String msg) {
         this.updateMsg = String.format("Updated %s data", msg.toLowerCase());
         this.alreadyReadMsg = String.format("%s data already read", msg);
-        this.timedOutMsg = String.format("Timed out %s data", msg.toLowerCase());
     }
 
     public String getUpdateMsg() {
@@ -24,9 +22,5 @@ public enum DataType {
 
     public String getAlreadyReadMsg() {
         return this.alreadyReadMsg;
-    }
-
-    public String getTimedOutMsg() {
-        return this.timedOutMsg;
     }
 }
