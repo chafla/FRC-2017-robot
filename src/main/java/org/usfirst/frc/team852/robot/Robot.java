@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.RobotDrive.MotorType;
 import org.athenian.BaseMqttCallback;
 import org.athenian.Utils;
 import org.eclipse.paho.client.mqttv3.*;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.usfirst.frc.team852.robot.data.CameraData;
 import org.usfirst.frc.team852.robot.data.DataType;
 import org.usfirst.frc.team852.robot.data.HeadingData;
@@ -92,7 +93,7 @@ public class Robot extends SampleRobot {
     private final ExecutorService logExecutor = Executors.newFixedThreadPool(4);
     private final ExecutorService mqttExecutor = Executors.newFixedThreadPool(1);
     private final Strategy strategy = new JvStrategy();
-    private final AtomicReference<MqttClient> mqttClientRef = new AtomicReference<>();
+    private final AtomicReference<MqttClient> mqttClientRef = new AtomicReference<>(null);
 
     private CameraData currentCameraGear = null;
     private LidarData currentFrontLidar = null;
@@ -142,39 +143,51 @@ public class Robot extends SampleRobot {
             opts.setConnectionTimeout(30);
 
             while (true) {
-                this.mqttClientRef.set(Utils.createMqttClient(url,
-                                                              new BaseMqttCallback() {
-                                                                  @Override
-                                                                  public void connectComplete(boolean reconnect, String url) {
-                                                                      super.connectComplete(reconnect, url);
-                                                                      subscribeToTopics(getMqttClient());
-                                                                  }
-                                                              }));
-                if (this.mqttClientRef.get() != null) {
-                    /*
-                    DisconnectedBufferOptions bufferOpts = new DisconnectedBufferOptions();
-                    bufferOpts.setBufferEnabled(true);
-                    bufferOpts.setBufferSize(100); // 100 message buffer
-                    bufferOpts.setDeleteOldestMessages(true); // Purge oldest messages when buffer is full
-                    bufferOpts.setPersistBuffer(false); // Do not buffer to disk
-                    this.mqttClientRef.get().setBufferOpts(bufferOpts);
-                    */
-
-                    try {
-                        System.out.println(format("Connecting to MQTT broker at %s...", url));
-                        this.mqttClientRef.get().connect(opts);
-                        System.out.println(format("Connected to %s", url));
-                        break;
-                    }
-                    catch (MqttException e) {
-                        System.out.println(format("Cannot connect to MQTT broker at %s [%s]", url, e.getMessage()));
-                        e.printStackTrace();
-                        this.mqttClientRef.set(null);
-                    }
+                try {
+                    this.mqttClientRef.set(new MqttClient(url, MqttClient.generateClientId(), new MemoryPersistence()));
+                }
+                catch (MqttException e) {
+                    System.out.println(format("Cannot create MQTT client [%s - %s]",
+                                              e.getClass().getSimpleName(),
+                                              e.getMessage()));
+                    e.printStackTrace();
+                    Utils.sleepSecs(1);
+                    continue;
                 }
 
-                System.out.println("Error connecting to MQTT broker");
-                Utils.sleepSecs(1);
+                this.mqttClientRef.get().setCallback(
+                        new BaseMqttCallback() {
+                            @Override
+                            public void connectComplete(boolean reconnect, String url) {
+                                super.connectComplete(reconnect, url);
+                                subscribeToTopics(getMqttClient());
+                            }
+                        });
+
+                /*
+                DisconnectedBufferOptions bufferOpts = new DisconnectedBufferOptions();
+                bufferOpts.setBufferEnabled(true);
+                bufferOpts.setBufferSize(100); // 100 message buffer
+                bufferOpts.setDeleteOldestMessages(true); // Purge oldest messages when buffer is full
+                bufferOpts.setPersistBuffer(false); // Do not buffer to disk
+                this.mqttClientRef.get().setBufferOpts(bufferOpts);
+                */
+
+                try {
+                    System.out.println(format("Connecting to MQTT broker at %s...", url));
+                    this.mqttClientRef.get().connect(opts);
+                    System.out.println(format("Connected to MQTT broker at %s", url));
+                    break;
+                }
+                catch (MqttException e) {
+                    System.out.println(format("Cannot connect to MQTT broker at %s [%s - %s]",
+                                              url,
+                                              e.getClass().getSimpleName(),
+                                              e.getMessage()));
+                    e.printStackTrace();
+                    this.mqttClientRef.set(null);
+                    Utils.sleepSecs(1);
+                }
             }
         });
 
