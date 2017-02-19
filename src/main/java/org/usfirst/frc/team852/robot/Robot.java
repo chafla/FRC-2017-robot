@@ -35,7 +35,10 @@ public class Robot extends SampleRobot {
     private static final int XBOX_Y = 4;
     private static final int XBOX_LB = 5;
     private static final int XBOX_RB = 6;
+    private static final int XBOX_Back = 7;
     private static final int XBOX_Start = 8;
+    private static final int XBOX_LS = 9;
+    private static final int XBOX_RS = 10;
 
     private static final double s_deadZone = 0.05;
     final IMqttMessageListener messageListener = (topic, msg) -> {
@@ -76,6 +79,7 @@ public class Robot extends SampleRobot {
     private final DoubleSolenoid piston = new DoubleSolenoid(0, 1);
     private final DigitalInput rightLimitSwitch = new DigitalInput(0);
     private final DigitalInput leftLimitSwitch = new DigitalInput(1);
+    private final Relay ring = new Relay(0);
     private final Joystick stick1 = new Joystick(0);
     private final Joystick stick2 = new Joystick(1);
     private final Joystick xbox = new Joystick(2);
@@ -84,7 +88,7 @@ public class Robot extends SampleRobot {
     private final AtomicReference<LidarData> rearLidarRef = new AtomicReference<>();
     private final AtomicReference<LidarData> leftLidarRef = new AtomicReference<>();
     private final AtomicReference<LidarData> rightLidarRef = new AtomicReference<>();
-    private final AtomicReference<HeadingData> headingRef = new AtomicReference<>();
+    public final AtomicReference<HeadingData> headingRef = new AtomicReference<>();
     private final RobotDrive robotDrive;
     private final ExecutorService logExecutor = Executors.newFixedThreadPool(4);
     private final ExecutorService mqttExecutor = Executors.newFixedThreadPool(1);
@@ -256,6 +260,8 @@ public class Robot extends SampleRobot {
         boolean speedMode = false;
         boolean goRight = true;
 
+        ring.set(Relay.Value.kForward);
+
         while (isOperatorControl() && isEnabled()) {
 
             // Use the joystick X axis for lateral movement, Y axis for forward
@@ -284,8 +290,15 @@ public class Robot extends SampleRobot {
                 this.strategy.onXboxLB(this);
             else if (this.xbox.getRawButton(XBOX_RB))
                 this.strategy.onXboxRB(this);
+            else if (this.xbox.getRawButton(XBOX_Back))
+                this.strategy.onXboxBack(this);
             else if (this.xbox.getRawButton(XBOX_Start))
                 this.strategy.onXboxStart(this);
+            else if (this.xbox.getRawButton(XBOX_LS))
+                this.strategy.onXboxLS(this);
+            else if (this.xbox.getRawButton(XBOX_RS))
+                this.strategy.onXboxRS(this);
+
 
             // NOTE! Left/right movement may be reversed, may need to modify signs!
 
@@ -310,22 +323,6 @@ public class Robot extends SampleRobot {
                 this.robotDrive.mecanumDrive_Cartesian((this.adjustDeadzone(this.stick1.getX()) + this.adjustDeadzone(this.stick2.getX())) / 2,
                                                        (this.adjustDeadzone(stick1.getY()) + this.adjustDeadzone(this.stick2.getY())) / 2,
                                                        (this.adjustDeadzone(this.stick2.getY()) - this.adjustDeadzone(this.stick1.getY())) / 2, 0);
-            /*
-            double x1 = stick1.getX();
-            double y1 = stick1.getY();
-            double x2 = stick2.getX();
-            double y2 = stick2.getY();
-
-            x1 = this.adjustDeadzone(x1); // this.adjustDeadzone(stick1.getX())
-            y1 = this.adjustDeadzone(y1); // this.adjustDeadzone(stick1.getY())
-            x2 = this.adjustDeadzone(x2);
-            y2 = this.adjustDeadzone(y2);
-
-            if (stick1.getZ() < 0)
-                robotDrive.mecanumDrive_Cartesian(x1, y1, x2, 0);
-            else
-                robotDrive.mecanumDrive_Cartesian((x1 + x2) / 2, (y1 + y2) / 2, -(y1 - y2) / 2, 0);
-            */
             Timer.delay(0.005); // wait 5ms to avoid hogging CPU cycles
         }
     }
@@ -428,7 +425,7 @@ public class Robot extends SampleRobot {
 
     public void moveRandPRight() {
         if (!rightLimitSwitch.get()) { // consider switching to while
-            rackAndPinion.set(0.3); // may need to reverse
+            rackAndPinion.set(0.2); // may need to reverse
             Timer.delay(0.01);
             rackAndPinion.set(0);
         }
@@ -436,7 +433,7 @@ public class Robot extends SampleRobot {
 
     public void moveRandPLeft() {
         if (!leftLimitSwitch.get()) {
-            rackAndPinion.set(-0.3);
+            rackAndPinion.set(-0.2);
             Timer.delay(0.01);
             rackAndPinion.set(0);
         }
@@ -454,8 +451,7 @@ public class Robot extends SampleRobot {
                         final MqttClient client = this.getClient();
                         if (client != null)
                             client.publish(sensorType.getTopic(), new MqttMessage(msg.getBytes()));
-                    }
-                    catch (MqttException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 });
@@ -508,26 +504,14 @@ public class Robot extends SampleRobot {
                              (topic, msg) -> {
                                  final double degree = Double.parseDouble(new String(msg.getPayload()));
                                  headingRef.set(new HeadingData(degree));
+                                 synchronized (headingRef) {
+                                     headingRef.notify();
+                                 }
                              });
         }
         catch (MqttException e) {
             e.printStackTrace();
         }
-
-//        try {
-//            client.subscribe(left_lidar, new IMqttMessageListener() {
-//                @Override
-//                public void messageArrived(String s, MqttMessage mqttMessage) throws Exception {
-//                    try {
-//                        client.publish("lidar/right/logging", new MqttMessage(mqttMessage.getPayload()));
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            });
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
     }
 
     private Integer valsGetInt(final String[] vals, final int idx) {

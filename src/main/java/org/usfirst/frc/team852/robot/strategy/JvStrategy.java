@@ -96,22 +96,33 @@ public class JvStrategy implements Strategy {
     }
 
     private static final double THRESHHOLD_DEGREES = 1.5;
-    private static final double PID_CORRECTION = 0.1;
+    private static final double PID_CORRECTION_STRAIGHT = 0.01;
+    private static final double PID_CORRECTION_TURN = 0.1;
 
     @Override
     public void onXboxX(final Robot robot) {
         final HeadingData headingData = robot.getCurrentHeading();
 
-        if (headingData == null) {
+        /*if (headingData == null) {
             System.out.println("Null HeadingData");
             return;
         }
+        synchronized (robot.headingRef) {
+            try {
+                robot.headingRef.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }*/
 
-        if (headingData.getTimestamp() <= robot.getHeadingLastTime()) {
-            System.out.println("Stale HeadingData");
+
+        if (headingData.isDataRead()) {
+            System.out.println("Heading data already read");
+            robot.drive(0, -0.2, 0, 0.1, HEADING, "old data - go straight");
             return;
         } else {
-            robot.updateHeadingLastTime();
+            System.out.println("Updated data read");
+            headingData.setDataRead();
         }
 
         final double degrees = headingData.getDegree();
@@ -126,20 +137,22 @@ public class JvStrategy implements Strategy {
         final String command;
         if (errorDegrees > THRESHHOLD_DEGREES) {
             // veered right, turn left, turnSpeed will be no less than -1
-            turnSpeed = Math.max(errorDegrees * PID_CORRECTION, -1);
+            System.out.println("greater");
+            turnSpeed = Math.max(-errorDegrees * PID_CORRECTION_STRAIGHT, -0.25);
             command = "Forward and counter-clockwise";
 
         } else if (errorDegrees < (THRESHHOLD_DEGREES * -1)) {
             // veered left, turn right, turnSpeed will be no more 1
-            turnSpeed = Math.min(errorDegrees * PID_CORRECTION, 1);
+            System.out.println("fewer");
+            turnSpeed = Math.min(-errorDegrees * PID_CORRECTION_STRAIGHT, 0.25);
             command = "Forward and clockwise";
         } else {
             // On course, drive straight.
             turnSpeed = 0;
             command = "Forward";
         }
-
-        robot.drive(0, 0.3, turnSpeed, 0, HEADING, command);
+        robot.logMsg(HEADING, "error: " + errorDegrees + " turn speed: " + turnSpeed);
+        robot.drive(0, -0.3, turnSpeed, 0.1, HEADING, command);
     }
 
     @Override
@@ -196,7 +209,9 @@ public class JvStrategy implements Strategy {
 
     @Override
     public void onXboxRB(final Robot robot) {
-        final CameraData cameraData = robot.getCurrentCameraGear();
+        robot.moveRandPRight();
+        //robot.moveRandPLeft();
+        /*final CameraData cameraData = robot.getCurrentCameraGear();
 
         if (cameraData == null) {
             System.out.println("Null CameraData");
@@ -220,7 +235,7 @@ public class JvStrategy implements Strategy {
         else if (xVal > (wVal / 2) + error)
             robot.moveRandPRight();
         else
-            robot.logMsg(CAMERA_GEAR, "centered by RandP");
+            robot.logMsg(CAMERA_GEAR, "centered by RandP");*/
     }
 
     @Override
@@ -232,13 +247,33 @@ public class JvStrategy implements Strategy {
             return;
         }
 
-        if (headingData.getTimestamp() <= robot.getHeadingLastTime()) {
-            System.out.println("Stale HeadingData");
+
+        synchronized (robot.headingRef) {
+            try {
+                robot.headingRef.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+        if (headingData.isDataRead()) {
+            System.out.println("Heading data already read");
+            return;
+        } else {
+            System.out.println("Updated data read");
+            headingData.setDataRead();
+        }
+/*
+        if (headingData.getTimestamp() < robot.getHeadingLastTime()) {
+            System.out.println(String.format("Stale HeadingData Timestamp: %d Last time: %d",
+                    headingData.getTimestamp(), robot.getHeadingLastTime()));
             return;
         } else {
             robot.updateHeadingLastTime();
+            System.out.println("Updated time");
         }
-
+*/
         final double degrees = headingData.getDegree();
         final double turn = 45;
 
@@ -252,20 +287,20 @@ public class JvStrategy implements Strategy {
         final String command;
         if (errorDegrees > THRESHHOLD_DEGREES) {
             // veered right, turn left, turnSpeed will be no less than -1
-            turnSpeed = Math.max(errorDegrees * PID_CORRECTION, -1);
-            command = "Counter-clockwise";
+            turnSpeed = Math.max(-errorDegrees * PID_CORRECTION_TURN, -0.25);
+            command = "Forward and counter-clockwise";
 
         } else if (errorDegrees < (THRESHHOLD_DEGREES * -1)) {
             // veered left, turn right, turnSpeed will be no more 1
-            turnSpeed = Math.min(errorDegrees * PID_CORRECTION, 1);
-            command = "Clockwise";
+            turnSpeed = Math.min(-errorDegrees * PID_CORRECTION_TURN, 0.25);
+            command = "Forward and clockwise";
         } else {
             // On course, drive straight.
             turnSpeed = 0;
             command = "Centered";
         }
 
-        robot.drive(0, 0, turnSpeed, 0, HEADING, command);
+        robot.drive(0, 0, turnSpeed, 0.1, HEADING, command);
     }
 
     @Override
@@ -281,6 +316,6 @@ public class JvStrategy implements Strategy {
 
     @Override
     public void onXboxRS(Robot robot) {
-        robot.drive(0, 0.5, 0, 0, HEADING, "straight");
+        robot.drive(0, -0.5, 0, 0.1, HEADING, "straight");
     }
 }

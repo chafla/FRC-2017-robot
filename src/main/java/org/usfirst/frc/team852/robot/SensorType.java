@@ -18,8 +18,8 @@ public enum SensorType {
             (robot, logMsg) ->
                     String.format("Heading: %f Front: %dcm Rear: %dcm - %s",
                                   robot.getCurrentHeading().getDegree(),
-                                  robot.getCurrentFrontLidar().getVal(),
-                                  robot.getCurrentRearLidar().getVal(),
+                            robot.getCurrentFrontLidar() != null ? robot.getCurrentFrontLidar().getVal() : -1,
+                            robot.getCurrentRearLidar() != null ? robot.getCurrentRearLidar().getVal() : -1,
                                   logMsg)
     );
 
