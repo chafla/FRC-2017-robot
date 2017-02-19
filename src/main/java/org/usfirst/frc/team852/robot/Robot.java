@@ -114,8 +114,8 @@ public class Robot extends SampleRobot {
         // Looks like maximum RPM (i.e joystick full up) is 400 RPM.
 
         this.initAllTalons();
-        piston.set(DoubleSolenoid.Value.kOff);
-        this.robotDrive = new RobotDrive(frontLeft, rearLeft, frontRight, rearRight);
+        this.piston.set(DoubleSolenoid.Value.kOff);
+        this.robotDrive = new RobotDrive(this.frontLeft, this.rearLeft, this.frontRight, this.rearRight);
 
         // Motors on one side are reversed, so unless the red/black wires are
         // reversed we switch them here. May need to use the right side
@@ -138,12 +138,14 @@ public class Robot extends SampleRobot {
             // We modified createMqttClient in org.athenian.Utils.java so that it
             // sets the option to automatically reconnect if the connection fails!
             while (true) {
-                final MqttClient client = Utils.createMqttClient(Constants.MQTT_HOSTNAME, Constants.MQTT_PORT, new BaseMqttCallback());
+                final MqttClient client = Utils.createMqttClient(Constants.MQTT_HOSTNAME,
+                                                                 Constants.MQTT_PORT,
+                                                                 new BaseMqttCallback());
                 if (client != null) {
-                    clientRef.set(client);
+                    this.clientRef.set(client);
                     break;
                 }
-                System.out.println("MqttClient: Error connecting to server");
+                System.out.println("Error connecting to MQTT broker");
                 Utils.sleepSecs(1);
             }
 

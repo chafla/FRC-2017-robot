@@ -25,7 +25,9 @@ public class Utils {
         }
     }
 
-    public static MqttClient createMqttClient(final String mqtt_hostname, final int mqtt_port, MqttCallback callback) {
+    public static MqttClient createMqttClient(final String mqtt_hostname,
+                                              final int mqtt_port,
+                                              final MqttCallback callback) {
 
         try {
             final MqttClient client = new MqttClient(String.format("tcp://%s:%d", mqtt_hostname, mqtt_port),
@@ -33,10 +35,14 @@ public class Utils {
                                                      new MemoryPersistence());
             if (callback != null)
                 client.setCallback(callback);
-            MqttConnectOptions opts = new MqttConnectOptions();
+
+            final MqttConnectOptions opts = new MqttConnectOptions();
             opts.setAutomaticReconnect(true);
+            opts.setConnectionTimeout(60);
+
             System.out.println(String.format("Connecting to MQTT server at %s:%d...", mqtt_hostname, mqtt_port));
             client.connect(opts);
+
             System.out.println(String.format("Connected to %s:%d", mqtt_hostname, mqtt_port));
             return client;
         }
