@@ -4,22 +4,22 @@ package org.usfirst.frc.team852.robot;
 public enum SensorType {
     CAMERA_GEAR(Constants.CAMERA_GEAR_LOGGING_POSITION_TOPIC,
                 (robot, desc) -> String.format("%d - %s",
-                                               robot.getCurrentCameraGear().getValOnce(),
+                        robot.getStrategy().getCurrentCameraGear().getValOnce(),
                                                desc)),
 
     LIDAR_GEAR(Constants.LIDAR_GEAR_LOGGING_POSITION_TOPIC,
                (robot, logMsg) ->
                        String.format("Left: %dmm Right: %dmm - %s",
-                                     robot.getCurrentLeftLidar().getValOnce(),
-                                     robot.getCurrentRightLidar().getValOnce(),
+                               robot.getStrategy().getCurrentLeftLidar().getValOnce(),
+                               robot.getStrategy().getCurrentRightLidar().getValOnce(),
                                      logMsg)),
 
     HEADING(Constants.HEADING_LOGGING_POSITION_TOPIC,
             (robot, logMsg) ->
                     String.format("Heading: %f Front: %dcm Rear: %dcm - %s",
-                                  robot.getCurrentHeading().getDegreesOnce(),
-                                  robot.getCurrentFrontLidar() != null ? robot.getCurrentFrontLidar().getValOnce() : -1,
-                                  robot.getCurrentRearLidar() != null ? robot.getCurrentRearLidar().getValOnce() : -1,
+                            robot.getStrategy().getCurrentHeading().getDegreesOnce(),
+                            robot.getStrategy().getCurrentFrontLidar() != null ? robot.getStrategy().getCurrentFrontLidar().getValOnce() : -1,
+                            robot.getStrategy().getCurrentRearLidar() != null ? robot.getStrategy().getCurrentRearLidar().getValOnce() : -1,
                                   logMsg)
     );
 

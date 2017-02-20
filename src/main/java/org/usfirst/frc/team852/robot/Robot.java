@@ -40,6 +40,7 @@ public class Robot extends SampleRobot {
     private static final int XBOX_Start = 8;
     private static final int XBOX_LS = 9;
     private static final int XBOX_RS = 10;
+    private static boolean climberToggle = false;
 
     private static final double s_deadZone = 0.05;
     final IMqttMessageListener messageListener = (topic, msg) -> {
@@ -84,23 +85,18 @@ public class Robot extends SampleRobot {
     private final Joystick stick1 = new Joystick(0);
     private final Joystick stick2 = new Joystick(1);
     private final Joystick xbox = new Joystick(2);
-    private final AtomicReference<CameraData> cameraGearRef = new AtomicReference<>();
-    private final AtomicReference<LidarData> frontLidarRef = new AtomicReference<>();
-    private final AtomicReference<LidarData> rearLidarRef = new AtomicReference<>();
-    private final AtomicReference<LidarData> leftLidarRef = new AtomicReference<>();
-    private final AtomicReference<LidarData> rightLidarRef = new AtomicReference<>();
-    private final AtomicReference<HeadingData> headingRef = new AtomicReference<>();
+    public final AtomicReference<CameraData> cameraGearRef = new AtomicReference<>();
+    public final AtomicReference<LidarData> frontLidarRef = new AtomicReference<>();
+    public final AtomicReference<LidarData> rearLidarRef = new AtomicReference<>();
+    public final AtomicReference<LidarData> leftLidarRef = new AtomicReference<>();
+    public final AtomicReference<LidarData> rightLidarRef = new AtomicReference<>();
+    public final AtomicReference<HeadingData> headingRef = new AtomicReference<>();
     private final ExecutorService logExecutor = Executors.newFixedThreadPool(4);
     private final ExecutorService mqttExecutor = Executors.newFixedThreadPool(1);
     private final Strategy strategy = new JvStrategy();
     private final AtomicReference<MqttClient> mqttClientRef = new AtomicReference<>(null);
 
-    private CameraData currentCameraGear = null;
-    private LidarData currentFrontLidar = null;
-    private LidarData currentRearLidar = null;
-    private LidarData currentLeftLidar = null;
-    private LidarData currentRightLidar = null;
-    private HeadingData currentHeading = null;
+
 
     private final RobotDrive robotDrive;
     // PRA private final MqttReconnect mqttReconnect;
@@ -238,9 +234,6 @@ public class Robot extends SampleRobot {
     @Override
     public void autonomous() {
 
-        final CameraData cameraData = getCurrentCameraGear();
-        final LidarData frontLidarData = getCurrentFrontLidar();
-        final LidarData rearLidarData = getCurrentRearLidar();
 
     }
 
@@ -317,12 +310,8 @@ public class Robot extends SampleRobot {
             //robotDrive.mecanumDrive_Cartesian(stick.getX(), stick.getY(), stick.getZ(), 0);
 
             // These are set once per iteration of the loop
-            this.currentCameraGear = this.cameraGearRef.get();
-            this.currentFrontLidar = this.frontLidarRef.get();
-            this.currentRearLidar = this.rearLidarRef.get();
-            this.currentLeftLidar = this.leftLidarRef.get();
-            this.currentRightLidar = this.rightLidarRef.get();
-            this.currentHeading = this.headingRef.get();
+
+            strategy.iterationInit(this);
 
             if (this.xbox.getRawButton(XBOX_A))
                 this.strategy.onXboxA(this);
@@ -344,15 +333,21 @@ public class Robot extends SampleRobot {
             else if (this.xbox.getRawButton(XBOX_Back))
                 this.strategy.onXboxBack(this);
             else if (this.xbox.getRawButton(XBOX_Start)) {
-                while (this.xbox.getRawButton(XBOX_Start) && isEnabled())
+                if (!climberToggle) {
                     this.strategy.onXboxStart(this);
-                this.climber.set(0);
+                    climberToggle = true;
+                } else {
+                    this.climber.set(0);
+                    climberToggle = false;
+                }
             }
             else if (this.xbox.getRawButton(XBOX_LS))
                 this.strategy.onXboxLS(this);
             else if (this.xbox.getRawButton(XBOX_RS))
                 this.strategy.onXboxRS(this);
 
+            if (xbox.getRawAxis(3) > 0.05)
+                controlledClimb(xbox.getRawAxis(3));
 
             // NOTE! Left/right movement may be reversed, may need to modify signs!
 
@@ -381,7 +376,7 @@ public class Robot extends SampleRobot {
         }
     }
 
-    public CameraData getCurrentCameraGear() {
+    /*public CameraData getCurrentCameraGear() {
         return this.currentCameraGear;
     }
 
@@ -403,6 +398,10 @@ public class Robot extends SampleRobot {
 
     public HeadingData getCurrentHeading() {
         return this.currentHeading;
+    }*/
+
+    public Strategy getStrategy() {
+        return strategy;
     }
 
     public MqttClient getMqttClient() {
@@ -479,13 +478,12 @@ public class Robot extends SampleRobot {
     public void drive(final double x,
                       final double y,
                       final double rot,
-                      final double delay,
                       final SensorType sensorType,
                       final String logMsg) {
         this.logMsg(sensorType, logMsg);
         this.robotDrive.mecanumDrive_Cartesian(x, y, rot, 0);
-        Timer.delay(delay);
-        this.robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+        //Timer.delay(delay);
+        //this.robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
     }
 
     public void pushGear() {
@@ -510,8 +508,16 @@ public class Robot extends SampleRobot {
             this.rackAndPinion.set(-0.5);
     }
 
+    public void stopRandP() {
+        this.rackAndPinion.set(0);
+    }
+
     public void climb() {
         climber.set(1);
+    }
+
+    public void controlledClimb(double power) {
+        climber.set(power);
     }
 
     public void logMsg(final SensorType sensorType, final String desc) {
@@ -630,6 +636,7 @@ public class Robot extends SampleRobot {
     public boolean getXboxButton(XButton button) {
         return xbox.getRawButton(button.get());
     }
+
 
 }
 

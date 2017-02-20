@@ -1,12 +1,17 @@
 package org.usfirst.frc.team852.robot.strategy;
 
 import org.usfirst.frc.team852.robot.Robot;
+import org.usfirst.frc.team852.robot.data.CameraData;
+import org.usfirst.frc.team852.robot.data.HeadingData;
+import org.usfirst.frc.team852.robot.data.LidarData;
 
 public interface Strategy {
 
     void reset();
 
     void resetHeading();
+
+    void iterationInit(Robot robot);
 
     void onXboxA(Robot robot);
 
@@ -27,4 +32,16 @@ public interface Strategy {
     void onXboxLS(Robot robot);
 
     void onXboxRS(Robot robot);
+
+    CameraData getCurrentCameraGear();
+
+    LidarData getCurrentLeftLidar();
+
+    LidarData getCurrentRightLidar();
+
+    LidarData getCurrentRearLidar();
+
+    LidarData getCurrentFrontLidar();
+
+    HeadingData getCurrentHeading();
 }

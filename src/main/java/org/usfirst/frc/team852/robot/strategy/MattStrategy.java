@@ -2,12 +2,20 @@ package org.usfirst.frc.team852.robot.strategy;
 
 import org.usfirst.frc.team852.robot.Robot;
 import org.usfirst.frc.team852.robot.SensorType;
+import org.usfirst.frc.team852.robot.data.CameraData;
+import org.usfirst.frc.team852.robot.data.HeadingData;
 import org.usfirst.frc.team852.robot.data.LidarData;
 
 
 public class MattStrategy implements Strategy {
 
     final private double DEFAULT_DELAY = 0.05;  // Default delay between movement actions
+    private CameraData currentCameraGear = null;
+    private LidarData currentFrontLidar = null;
+    private LidarData currentRearLidar = null;
+    private LidarData currentLeftLidar = null;
+    private LidarData currentRightLidar = null;
+    private HeadingData currentHeading = null;
 
     @Override
     public void reset() {
@@ -68,8 +76,8 @@ public class MattStrategy implements Strategy {
     }
 
     public void centerWithLidar(final Robot robot) {
-        final LidarData leftLidar = robot.getCurrentLeftLidar();
-        final LidarData rightLidar = robot.getCurrentRightLidar();
+        final LidarData leftLidar = this.currentLeftLidar;
+        final LidarData rightLidar = this.currentRightLidar;
         final int leftMm;
         final int rightMm;
 
@@ -83,7 +91,7 @@ public class MattStrategy implements Strategy {
         if (leftLidar == null || rightLidar == null) {
             System.out.println("Lidar data is null.");
             // We've got no valid info, let's just go for whatever we can get
-            robot.drive(0, 0, 0.35, DEFAULT_DELAY, SensorType.LIDAR_GEAR, "Searching for valid surface");
+            robot.drive(0, 0, 0.35, SensorType.LIDAR_GEAR, "Searching for valid surface");
             return;
 
         } else {
@@ -100,11 +108,11 @@ public class MattStrategy implements Strategy {
         } else if ((leftMm < MIN && leftMm > 0) || rightMm < MIN && rightMm > 0) {
             System.out.println("Value was below minimum threshold.");
         } else if (leftMm > 0 && rightMm < 0)
-            robot.drive(0, 0, -0.35, DEFAULT_DELAY, SensorType.LIDAR_GEAR, "Valid surface found for right lidar");
+            robot.drive(0, 0, -0.35, SensorType.LIDAR_GEAR, "Valid surface found for right lidar");
 
             // If we're at least getting one value, rotate appropriately
         else if (leftMm < 0 && rightMm > 0)
-            robot.drive(0, 0, 0.35, DEFAULT_DELAY, SensorType.LIDAR_GEAR, "Valid surface found for left lidar");
+            robot.drive(0, 0, 0.35, SensorType.LIDAR_GEAR, "Valid surface found for left lidar");
 
         else {
             dif = rightMm - leftMm;
@@ -118,8 +126,8 @@ public class MattStrategy implements Strategy {
 
                 sign = dif > 0 ? 1 : -1;
                 System.out.printf("Left lidar: %s, Right lidar: %s.\n", leftMm, rightMm);
-                robot.drive(0, 0, sign * 0.20, DEFAULT_DELAY, SensorType.LIDAR_GEAR, "Aligning");
-                robot.drive(0, 0, 0, 0, SensorType.LIDAR_GEAR, "Stopping");  // Stop movement
+                robot.drive(0, 0, sign * 0.20, SensorType.LIDAR_GEAR, "Aligning");
+                robot.drive(0, 0, 0, SensorType.LIDAR_GEAR, "Stopping");  // Stop movement
 
             } else {
                 System.out.println("Lidar centered.");
@@ -141,12 +149,12 @@ public class MattStrategy implements Strategy {
     }
 
     public void approachGear(final Robot robot, int dist) {
-        final LidarData leftLidar = robot.getCurrentLeftLidar();
-        final LidarData rightLidar = robot.getCurrentRightLidar();
+        final LidarData leftLidar = this.currentLeftLidar;
+        final LidarData rightLidar = this.currentRightLidar;
 
         boolean atDist = false;
         int TOLERANCE = 10;  // Possible allowed distance between the differences
-        robot.drive(0, 0, 0, 0, SensorType.LIDAR_GEAR, "Stopping");  // Stop movement
+        robot.drive(0, 0, 0, SensorType.LIDAR_GEAR, "Stopping");  // Stop movement
 
         if (leftLidar == null || rightLidar == null) {
             this.centerWithLidar(robot);
@@ -172,7 +180,7 @@ public class MattStrategy implements Strategy {
 
                 robot.drive(0, yPwr, 0, DEFAULT_DELAY, SensorType.LIDAR_GEAR, String.format("Adjusting %s", movementDir > 0 ? "forwards" : "backwards"));
                 */
-                robot.drive(0, movementDir * -0.2 * (((left + right) / 2) / dist), 0, DEFAULT_DELAY, SensorType.LIDAR_GEAR, String.format("Adjusting %s", movementDir > 0 ? "forwards" : "backwards"));
+                robot.drive(0, movementDir * -0.2 * (((left + right) / 2) / dist), 0, SensorType.LIDAR_GEAR, String.format("Adjusting %s", movementDir > 0 ? "forwards" : "backwards"));
 
 
             }
@@ -187,8 +195,47 @@ public class MattStrategy implements Strategy {
     }
 
     public void stopMovement(Robot robot) {
-        robot.drive(0, 0, 0, 0, SensorType.LIDAR_GEAR, "Stopping");  // Stop movement
+        robot.drive(0, 0, 0, SensorType.LIDAR_GEAR, "Stopping");  // Stop movement
 
     }
 
+    @Override
+    public void iterationInit(Robot robot) {
+        this.currentCameraGear = robot.cameraGearRef.get();
+        this.currentFrontLidar = robot.frontLidarRef.get();
+        this.currentRearLidar = robot.rearLidarRef.get();
+        this.currentLeftLidar = robot.leftLidarRef.get();
+        this.currentRightLidar = robot.rightLidarRef.get();
+        this.currentHeading = robot.headingRef.get();
+    }
+
+    @Override
+    public CameraData getCurrentCameraGear() {
+        return null;
+    }
+
+    @Override
+    public LidarData getCurrentLeftLidar() {
+        return null;
+    }
+
+    @Override
+    public LidarData getCurrentRightLidar() {
+        return null;
+    }
+
+    @Override
+    public LidarData getCurrentRearLidar() {
+        return null;
+    }
+
+    @Override
+    public LidarData getCurrentFrontLidar() {
+        return null;
+    }
+
+    @Override
+    public HeadingData getCurrentHeading() {
+        return null;
+    }
 }
