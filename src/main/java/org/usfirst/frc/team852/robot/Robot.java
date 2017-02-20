@@ -332,7 +332,7 @@ public class Robot extends SampleRobot {
             // that is why joysticks do it that way.)
 
             // Velocity drive needs a larger deadzone, and we can't extend Joystick.
-            if (!this.xbox.getRawButton(XBOX_A)) {
+            if (!this.xbox.getRawButton(XBOX_A) && !this.xbox.getRawButton(XBOX_X) && !this.xbox.getRawButton(XBOX_Back)) {
                 if (this.stick1.getZ() < 0)
                     this.robotDrive.mecanumDrive_Cartesian(this.adjustDeadzone(this.stick1.getX()),
                                                            -this.adjustDeadzone(this.stick1.getY()),

@@ -37,17 +37,17 @@ public class JvStrategy extends Strategy {
         final LidarData rightLidarData = this.getCurrentRightLidar();
 
         if (cameraData == null) {
-            //robot.logMsg(CAMERA_GEAR, "Null camera data");
+            robot.logMsg(CAMERA_GEAR, "Null camera data");
             return;
         }
 
         if (leftLidarData == null) {
-            //robot.logMsg(LIDAR_GEAR, "Null left lidar data");
+            robot.logMsg(LIDAR_GEAR, "Null left lidar data");
             return;
         }
 
         if (rightLidarData == null) {
-            //robot.logMsg(LIDAR_GEAR, "Null right lidar data");
+            robot.logMsg(LIDAR_GEAR, "Null right lidar data");
             return;
         }
 
@@ -86,12 +86,12 @@ public class JvStrategy extends Strategy {
             if (x != 0)
                 x = 0;
             //robot.drive(0, 0, 0, CAMERA_GEAR, "chassis centered");
-            /*if (xVal < (wVal / 2 - 1))
+            if (xVal < (wVal / 2 - 1))
                 robot.moveRandPLeft();
             else if (xVal > (wVal / 2 + 1))
                 robot.moveRandPRight();
             else
-                robot.stopRandP();*/
+                robot.stopRandP();
         }
 
         if (leftLidarData.getValOnce() == -1 || rightLidarData.getValOnce() == -1) {
@@ -139,8 +139,7 @@ public class JvStrategy extends Strategy {
                 //robot.drive(0, 0, 0, LIDAR_GEAR, "centered");
             }
         }
-        System.out.println(x + " " + y + " " + rot);
-        robot.drive(x, y, rot, CAMERA_GEAR, "Log");
+        robot.drive(x, y, rot, CAMERA_GEAR, x + " " + y + " " + rot);
     }
 
     @Override
@@ -184,9 +183,9 @@ public class JvStrategy extends Strategy {
 
 
         if (headingData.isInvalid()) {
-            robot.logMsg(HEADING, headingData.getAlreadyReadMsg());
-            robot.drive(0, -0.2, 0, HEADING, "old data -> go straight");
-            return;
+            //robot.logMsg(HEADING, headingData.getAlreadyReadMsg());
+            //robot.drive(0, -0.2, 0, HEADING, "old data -> go straight");
+            //return;
         }
 
         final double degrees = headingData.getDegreesOnce();
@@ -313,9 +312,9 @@ public class JvStrategy extends Strategy {
         }
 
         if (headingData.isInvalid()) {
-            System.out.println(headingData.getAlreadyReadMsg());
-            this.waitOnHeading(0);
-            return;
+            //System.out.println(headingData.getAlreadyReadMsg());
+            //this.waitOnHeading(0);
+            //return;
         }
 
         final double degrees = headingData.getDegreesOnce();
