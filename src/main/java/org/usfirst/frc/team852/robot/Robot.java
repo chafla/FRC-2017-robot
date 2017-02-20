@@ -85,21 +85,12 @@ public class Robot extends SampleRobot {
     private final Joystick stick1 = new Joystick(0);
     private final Joystick stick2 = new Joystick(1);
     private final Joystick xbox = new Joystick(2);
-    public final AtomicReference<CameraData> cameraGearRef = new AtomicReference<>();
-    public final AtomicReference<LidarData> frontLidarRef = new AtomicReference<>();
-    public final AtomicReference<LidarData> rearLidarRef = new AtomicReference<>();
-    public final AtomicReference<LidarData> leftLidarRef = new AtomicReference<>();
-    public final AtomicReference<LidarData> rightLidarRef = new AtomicReference<>();
-    public final AtomicReference<HeadingData> headingRef = new AtomicReference<>();
     private final ExecutorService logExecutor = Executors.newFixedThreadPool(4);
     private final ExecutorService mqttExecutor = Executors.newFixedThreadPool(1);
-    private final Strategy strategy = new JvStrategy();
     private final AtomicReference<MqttClient> mqttClientRef = new AtomicReference<>(null);
-
-
+    private final Strategy strategy = new JvStrategy(this);
 
     private final RobotDrive robotDrive;
-    // PRA private final MqttReconnect mqttReconnect;
 
 	/*
      * Initialize a talon so that speed control will work.
@@ -163,15 +154,6 @@ public class Robot extends SampleRobot {
                             }
                         });
 
-                /*
-                DisconnectedBufferOptions bufferOpts = new DisconnectedBufferOptions();
-                bufferOpts.setBufferEnabled(true);
-                bufferOpts.setBufferSize(100); // 100 message buffer
-                bufferOpts.setDeleteOldestMessages(true); // Purge oldest messages when buffer is full
-                bufferOpts.setPersistBuffer(false); // Do not buffer to disk
-                this.mqttClientRef.get().setBufferOpts(bufferOpts);
-                */
-
                 try {
                     System.out.println(format("Connecting to MQTT broker at %s...", url));
                     this.mqttClientRef.get().connect(opts);
@@ -189,13 +171,6 @@ public class Robot extends SampleRobot {
                 }
             }
         });
-
-        /* PRA
-        this.mqttReconnect = new MqttReconnect(Constants.MQTT_HOSTNAME,
-                                               Constants.MQTT_PORT,
-                                               30, this::subscribeToTopics);
-        this.mqttReconnect.start();
-        */
     }
 
     private void initAllTalons() {
@@ -299,7 +274,7 @@ public class Robot extends SampleRobot {
         boolean speedMode = false;
         boolean goRight = true;
 
-        ring.set(Relay.Value.kForward);
+        this.ring.set(Relay.Value.kForward);
         this.piston.set(DoubleSolenoid.Value.kReverse);
 
         while (isOperatorControl() && isEnabled()) {
@@ -311,36 +286,35 @@ public class Robot extends SampleRobot {
 
             // These are set once per iteration of the loop
 
-            strategy.iterationInit(this);
+            this.strategy.iterationInit();
 
             if (this.xbox.getRawButton(XBOX_A))
-                this.strategy.onXboxA(this);
+                this.strategy.onXboxA();
             else if (this.xbox.getRawButton(XBOX_B))
-                this.strategy.onXboxB(this);
+                this.strategy.onXboxB();
             else if (this.xbox.getRawButton(XBOX_X))
-                this.strategy.onXboxX(this);
+                this.strategy.onXboxX();
             else if (this.xbox.getRawButton(XBOX_Y))
-                this.strategy.onXboxY(this);
+                this.strategy.onXboxY();
             else if (this.xbox.getRawButton(XBOX_LB)) {
                 while (this.xbox.getRawButton(XBOX_LB) && isEnabled())
-                    this.strategy.onXboxLB(this);
+                    this.strategy.onXboxLB();
                 this.rackAndPinion.set(0);
             } else if (this.xbox.getRawButton(XBOX_RB)) {
                 while (this.xbox.getRawButton(XBOX_RB) && isEnabled())
-                    this.strategy.onXboxRB(this);
+                    this.strategy.onXboxRB();
                 this.rackAndPinion.set(0);
-            }
-            else if (this.xbox.getRawButton(XBOX_Back))
-                this.strategy.onXboxBack(this);
+            } else if (this.xbox.getRawButton(XBOX_Back))
+                this.strategy.onXboxBack();
             else if (this.xbox.getRawButton(XBOX_Start))
-                this.strategy.onXboxStart(this);
+                this.strategy.onXboxStart();
             else if (this.xbox.getRawButton(XBOX_LS))
-                this.strategy.onXboxLS(this);
+                this.strategy.onXboxLS();
             else if (this.xbox.getRawButton(XBOX_RS))
-                this.strategy.onXboxRS(this);
+                this.strategy.onXboxRS();
 
-            if (xbox.getRawAxis(3) > 0.05)
-                controlledClimb(xbox.getRawAxis(3));
+            if (this.xbox.getRawAxis(3) > 0.05)
+                controlledClimb(this.xbox.getRawAxis(3));
             else
                 controlledClimb(0);
 
@@ -361,115 +335,24 @@ public class Robot extends SampleRobot {
             if (!this.xbox.getRawButton(XBOX_A)) {
                 if (this.stick1.getZ() < 0)
                     this.robotDrive.mecanumDrive_Cartesian(this.adjustDeadzone(this.stick1.getX()),
-                            -this.adjustDeadzone(this.stick1.getY()),
-                            this.adjustDeadzone(this.stick2.getX()),
-                            0);
+                                                           -this.adjustDeadzone(this.stick1.getY()),
+                                                           this.adjustDeadzone(this.stick2.getX()),
+                                                           0);
                 else
                     this.robotDrive.mecanumDrive_Cartesian((this.adjustDeadzone(this.stick1.getX()) + this.adjustDeadzone(this.stick2.getX())) / 2,
-                            (this.adjustDeadzone(stick1.getY()) + this.adjustDeadzone(this.stick2.getY())) / 2,
-                            (this.adjustDeadzone(this.stick2.getY()) - this.adjustDeadzone(this.stick1.getY())) / 2, 0);
+                                                           (this.adjustDeadzone(this.stick1.getY()) + this.adjustDeadzone(this.stick2.getY())) / 2,
+                                                           (this.adjustDeadzone(this.stick2.getY()) - this.adjustDeadzone(this.stick1.getY())) / 2, 0);
             }
             Timer.delay(0.005); // wait 5ms to avoid hogging CPU cycles
         }
     }
 
-    /*public CameraData getCurrentCameraGear() {
-        return this.currentCameraGear;
-    }
-
-    public LidarData getCurrentFrontLidar() {
-        return this.currentFrontLidar;
-    }
-
-    public LidarData getCurrentRearLidar() {
-        return this.currentRearLidar;
-    }
-
-    public LidarData getCurrentLeftLidar() {
-        return this.currentLeftLidar;
-    }
-
-    public LidarData getCurrentRightLidar() {
-        return this.currentRightLidar;
-    }
-
-    public HeadingData getCurrentHeading() {
-        return this.currentHeading;
-    }*/
-
     public Strategy getStrategy() {
-        return strategy;
+        return this.strategy;
     }
 
     public MqttClient getMqttClient() {
         return this.mqttClientRef.get();
-        // PRA return this.mqttReconnect.getMqttClient();
-    }
-
-    public void waitOnCameraGear(final long timeoutMillis) {
-        synchronized (this.cameraGearRef) {
-            try {
-                this.cameraGearRef.wait(timeoutMillis);
-            }
-            catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public void waitOnFrontLidar(final long timeoutMillis) {
-        synchronized (this.frontLidarRef) {
-            try {
-                this.frontLidarRef.wait(timeoutMillis);
-            }
-            catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public void waitOnRearLidar(final long timeoutMillis) {
-        synchronized (this.rearLidarRef) {
-            try {
-                this.rearLidarRef.wait(timeoutMillis);
-            }
-            catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public void waitOnLeftLidar(final long timeoutMillis) {
-        synchronized (this.leftLidarRef) {
-            try {
-                this.leftLidarRef.wait(timeoutMillis);
-            }
-            catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public void waitOnRightLidar(final long timeoutMillis) {
-        synchronized (this.rightLidarRef) {
-            try {
-                this.rightLidarRef.wait(timeoutMillis);
-            }
-            catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public void waitOnHeading(final long timeoutMillis) {
-        synchronized (this.headingRef) {
-            try {
-                this.headingRef.wait(timeoutMillis);
-            }
-            catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     public void drive(final double x,
@@ -508,11 +391,11 @@ public class Robot extends SampleRobot {
     }
 
     public void climb() {
-        climber.set(1);
+        this.climber.set(1);
     }
 
     public void controlledClimb(double power) {
-        climber.set(power);
+        this.climber.set(power);
     }
 
     public void logMsg(final SensorType sensorType, final String desc) {
@@ -547,54 +430,54 @@ public class Robot extends SampleRobot {
                                  final String[] info = new String(msg.getPayload()).split(":");
                                  final int currloc = Integer.parseInt(info[0]);
                                  final int width = Integer.parseInt(info[1]);
-                                 this.cameraGearRef.set(new CameraData(DataType.CameraGear, currloc, width));
-                                 synchronized (this.cameraGearRef) {
-                                     this.cameraGearRef.notifyAll();
+                                 this.strategy.getCameraGearRef().set(new CameraData(DataType.CameraGear, currloc, width));
+                                 synchronized (this.strategy.getCameraGearRef()) {
+                                     this.strategy.getCameraGearRef().notifyAll();
                                  }
                              });
 
             client.subscribe(Constants.FRONT_LIDAR_TOPIC,
                              (topic, msg) -> {
                                  final int dist = Integer.parseInt(new String(msg.getPayload()));
-                                 this.frontLidarRef.set(new LidarData(DataType.FrontLidar, dist));
-                                 synchronized (this.frontLidarRef) {
-                                     this.frontLidarRef.notifyAll();
+                                 this.strategy.getFrontLidarRef().set(new LidarData(DataType.FrontLidar, dist));
+                                 synchronized (this.strategy.getFrontLidarRef()) {
+                                     this.strategy.getFrontLidarRef().notifyAll();
                                  }
                              });
 
             client.subscribe(Constants.REAR_LIDAR_TOPIC,
                              (topic, msg) -> {
                                  final int dist = Integer.parseInt(new String(msg.getPayload()));
-                                 this.rearLidarRef.set(new LidarData(DataType.RearLidar, dist));
-                                 synchronized (this.rearLidarRef) {
-                                     this.rearLidarRef.notifyAll();
+                                 this.strategy.getRearLidarRef().set(new LidarData(DataType.RearLidar, dist));
+                                 synchronized (this.strategy.getRearLidarRef()) {
+                                     this.strategy.getRearLidarRef().notifyAll();
                                  }
                              });
 
             client.subscribe(Constants.LEFT_LIDAR_TOPIC,
                              (topic, msg) -> {
                                  final int dist = Integer.parseInt(new String(msg.getPayload()));
-                                 this.leftLidarRef.set(new LidarData(DataType.LeftLidar, dist));
-                                 synchronized (this.leftLidarRef) {
-                                     this.leftLidarRef.notifyAll();
+                                 this.strategy.getLeftLidarRef().set(new LidarData(DataType.LeftLidar, dist));
+                                 synchronized (this.strategy.getLeftLidarRef()) {
+                                     this.strategy.getLeftLidarRef().notifyAll();
                                  }
                              });
 
             client.subscribe(Constants.RIGHT_LIDAR_TOPIC,
                              (topic, msg) -> {
                                  final int dist = Integer.parseInt(new String(msg.getPayload()));
-                                 this.rightLidarRef.set(new LidarData(DataType.RightLidar, dist));
-                                 synchronized (this.rightLidarRef) {
-                                     this.rightLidarRef.notifyAll();
+                                 this.strategy.getRightLidarRef().set(new LidarData(DataType.RightLidar, dist));
+                                 synchronized (this.strategy.getRightLidarRef()) {
+                                     this.strategy.getRightLidarRef().notifyAll();
                                  }
                              });
 
             client.subscribe(Constants.HEADING_TOPIC,
                              (topic, msg) -> {
                                  final double degree = Double.parseDouble(new String(msg.getPayload()));
-                                 this.headingRef.set(new HeadingData(degree));
-                                 synchronized (this.headingRef) {
-                                     this.headingRef.notifyAll();
+                                 this.strategy.getHeadingRef().set(new HeadingData(degree));
+                                 synchronized (this.strategy.getHeadingRef()) {
+                                     this.strategy.getHeadingRef().notifyAll();
                                  }
                              });
         }

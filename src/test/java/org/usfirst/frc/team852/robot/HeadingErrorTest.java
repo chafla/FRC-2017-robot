@@ -2,17 +2,17 @@ package org.usfirst.frc.team852.robot;
 
 import org.assertj.core.data.Offset;
 import org.junit.Test;
-import org.usfirst.frc.team852.robot.navigation.HeadingFeedback;
+import org.usfirst.frc.team852.robot.navigation.HeadingError;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class HeadingFeedbackTest {
+public class HeadingErrorTest {
 
     private static final Offset<Double> offset = Offset.offset(0.001);
 
     @Test
     public void lessThan90Test() {
-        final HeadingFeedback fb = new HeadingFeedback(15);
+        final HeadingError fb = new HeadingError(15);
         assertThat(fb.getError(15)).isEqualTo(0);
         assertThat(fb.getError(10)).isEqualTo(-5);
         assertThat(fb.getError(20)).isEqualTo(5);
@@ -32,7 +32,7 @@ public class HeadingFeedbackTest {
 
     @Test
     public void greaterThan270Test() {
-        final HeadingFeedback fb = new HeadingFeedback(345);
+        final HeadingError fb = new HeadingError(345);
 
         assertThat(fb.getError(345)).isEqualTo(0);
         assertThat(fb.getError(340)).isEqualTo(-5);
@@ -55,7 +55,7 @@ public class HeadingFeedbackTest {
 
     @Test
     public void between90And270Test() {
-        final HeadingFeedback fb = new HeadingFeedback(180);
+        final HeadingError fb = new HeadingError(180);
 
         assertThat(fb.getError(180)).isEqualTo(0);
         assertThat(fb.getError(170)).isEqualTo(-10);
@@ -72,7 +72,7 @@ public class HeadingFeedbackTest {
 
     @Test
     public void at0() {
-        final HeadingFeedback fb = new HeadingFeedback(0);
+        final HeadingError fb = new HeadingError(0);
 
         assertThat(fb.getError(0)).isEqualTo(0);
         assertThat(fb.getError(360)).isEqualTo(0);
@@ -86,7 +86,7 @@ public class HeadingFeedbackTest {
 
     @Test
     public void at90() {
-        final HeadingFeedback fb = new HeadingFeedback(90);
+        final HeadingError fb = new HeadingError(90);
 
         assertThat(fb.getError(90)).isEqualTo(0);
         assertThat(fb.getError(180)).isEqualTo(90);
@@ -97,7 +97,7 @@ public class HeadingFeedbackTest {
 
     @Test
     public void at180() {
-        final HeadingFeedback fb = new HeadingFeedback(180);
+        final HeadingError fb = new HeadingError(180);
 
         assertThat(fb.getError(180)).isEqualTo(0);
         assertThat(fb.getError(0)).isEqualTo(180);
@@ -108,7 +108,7 @@ public class HeadingFeedbackTest {
 
     @Test
     public void at270() {
-        final HeadingFeedback fb = new HeadingFeedback(270);
+        final HeadingError fb = new HeadingError(270);
 
         assertThat(fb.getError(270)).isEqualTo(0);
         assertThat(fb.getError(360)).isEqualTo(90);

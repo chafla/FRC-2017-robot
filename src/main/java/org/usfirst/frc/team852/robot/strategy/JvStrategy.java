@@ -4,63 +4,37 @@ import org.usfirst.frc.team852.robot.Robot;
 import org.usfirst.frc.team852.robot.data.CameraData;
 import org.usfirst.frc.team852.robot.data.HeadingData;
 import org.usfirst.frc.team852.robot.data.LidarData;
-import org.usfirst.frc.team852.robot.navigation.HeadingFeedback;
-
-import java.util.concurrent.atomic.AtomicReference;
+import org.usfirst.frc.team852.robot.navigation.HeadingError;
 
 import static org.usfirst.frc.team852.robot.SensorType.*;
 
-public class JvStrategy implements Strategy {
-
-    private final AtomicReference<HeadingFeedback> headingFeedbackRef = new AtomicReference<>();
-
-    public JvStrategy() {
-        this.reset();
-    }
-
-    private HeadingFeedback getHeadingFeedback() {
-        return headingFeedbackRef.get();
-    }
+public class JvStrategy extends Strategy {
 
     private static final double THRESHHOLD_DEGREES = 1.5;
     private static final double PID_CORRECTION_STRAIGHT = 0.01;
     private static final double PID_CORRECTION_TURN = 0.1;
-    double x = 0;
-    double y = 0;
-    double rot = 0;
-    private CameraData currentCameraGear = null;
-    private LidarData currentFrontLidar = null;
-    private LidarData currentRearLidar = null;
-    private LidarData currentLeftLidar = null;
-    private LidarData currentRightLidar = null;
-    private HeadingData currentHeading = null;
 
-    @Override
-    public void iterationInit(Robot robot) {
-        this.currentCameraGear = robot.cameraGearRef.get();
-        this.currentFrontLidar = robot.frontLidarRef.get();
-        this.currentRearLidar = robot.rearLidarRef.get();
-        this.currentLeftLidar = robot.leftLidarRef.get();
-        this.currentRightLidar = robot.rightLidarRef.get();
-        this.currentHeading = robot.headingRef.get();
+    private double x = 0;
+    private double y = 0;
+    private double rot = 0;
+
+    public JvStrategy(final Robot robot) {
+        super(robot);
+        this.reset();
     }
 
     @Override
     public void reset() {
-        this.headingFeedbackRef.set(null);
-    }
-
-    @Override
-    public void resetHeading() {
-        this.headingFeedbackRef.set(null);
+        this.resetHeadingError();
     }
 
     // consider renaming these methods
     @Override
-    public void onXboxA(final Robot robot) {
-        final CameraData cameraData = this.currentCameraGear;
-        final LidarData leftLidarData = this.currentLeftLidar;
-        final LidarData rightLidarData = this.currentRightLidar;
+    public void onXboxA() {
+        final Robot robot = this.getRobot();
+        final CameraData cameraData = this.getCurrentCameraGear();
+        final LidarData leftLidarData = this.getCurrentLeftLidar();
+        final LidarData rightLidarData = this.getCurrentRightLidar();
 
         if (cameraData == null) {
             //robot.logMsg(CAMERA_GEAR, "Null camera data");
@@ -170,8 +144,9 @@ public class JvStrategy implements Strategy {
     }
 
     @Override
-    public void onXboxB(final Robot robot) {
-        final CameraData cameraData = this.currentCameraGear;
+    public void onXboxB() {
+        final Robot robot = this.getRobot();
+        final CameraData cameraData = this.getCurrentCameraGear();
 
         if (cameraData == null) {
             robot.logMsg(CAMERA_GEAR, "Null camera data");
@@ -180,7 +155,7 @@ public class JvStrategy implements Strategy {
 
         if (cameraData.isInvalid()) {
             System.out.println(cameraData.getAlreadyReadMsg());
-            robot.waitOnCameraGear(0);
+            this.waitOnCameraGear(0);
             return;
         }
 
@@ -198,8 +173,9 @@ public class JvStrategy implements Strategy {
     }
 
     @Override
-    public void onXboxX(final Robot robot) {
-        final HeadingData headingData = this.currentHeading;
+    public void onXboxX() {
+        final Robot robot = this.getRobot();
+        final HeadingData headingData = this.getCurrentHeading();
 
         if (headingData == null) {
             robot.logMsg(HEADING, "Null heading data");
@@ -216,10 +192,10 @@ public class JvStrategy implements Strategy {
         final double degrees = headingData.getDegreesOnce();
 
         // This will be set the first time through
-        if (this.getHeadingFeedback() == null)
-            this.headingFeedbackRef.set(new HeadingFeedback(degrees));
+        if (this.getHeadingError() == null)
+            this.setHeadingError(new HeadingError(degrees));
 
-        final double errorDegrees = this.getHeadingFeedback().getError(degrees);
+        final double errorDegrees = this.getHeadingError().getError(degrees);
 
         final double turnSpeed;
         final String command;
@@ -242,9 +218,10 @@ public class JvStrategy implements Strategy {
     }
 
     @Override
-    public void onXboxY(final Robot robot) {
-        final LidarData leftLidarData = this.currentLeftLidar;
-        final LidarData rightLidarData = this.currentRightLidar;
+    public void onXboxY() {
+        final Robot robot = this.getRobot();
+        final LidarData leftLidarData = this.getCurrentLeftLidar();
+        final LidarData rightLidarData = this.getCurrentRightLidar();
 
         if (leftLidarData == null) {
             robot.logMsg(LIDAR_GEAR, "Null left lidar data");
@@ -258,13 +235,13 @@ public class JvStrategy implements Strategy {
 
         if (leftLidarData.isInvalid()) {
             System.out.println(leftLidarData.getAlreadyReadMsg());
-            robot.waitOnLeftLidar(0);
+            this.waitOnLeftLidar(0);
             return;
         }
 
         if (rightLidarData.isInvalid()) {
             System.out.println(rightLidarData.getAlreadyReadMsg());
-            robot.waitOnRightLidar(0);
+            this.waitOnRightLidar(0);
             return;
         }
 
@@ -316,18 +293,19 @@ public class JvStrategy implements Strategy {
     }
 
     @Override
-    public void onXboxLB(final Robot robot) {
-        robot.moveRandPLeft();
+    public void onXboxLB() {
+        this.getRobot().moveRandPLeft();
     }
 
     @Override
-    public void onXboxRB(final Robot robot) {
-        robot.moveRandPRight();
+    public void onXboxRB() {
+        this.getRobot().moveRandPRight();
     }
 
     @Override
-    public void onXboxBack(Robot robot) {
-        final HeadingData headingData = this.currentHeading;
+    public void onXboxBack() {
+        final Robot robot = this.getRobot();
+        final HeadingData headingData = this.getCurrentHeading();
 
         if (headingData == null) {
             robot.logMsg(HEADING, "Null heading data");
@@ -336,7 +314,7 @@ public class JvStrategy implements Strategy {
 
         if (headingData.isInvalid()) {
             System.out.println(headingData.getAlreadyReadMsg());
-            robot.waitOnHeading(0);
+            this.waitOnHeading(0);
             return;
         }
 
@@ -344,10 +322,10 @@ public class JvStrategy implements Strategy {
         final double turn = 45;
 
         // This will be set the first time through
-        if (this.getHeadingFeedback() == null)
-            this.headingFeedbackRef.set(new HeadingFeedback(degrees + turn));
+        if (this.getHeadingError() == null)
+            this.setHeadingError(new HeadingError(degrees + turn));
 
-        final double errorDegrees = this.getHeadingFeedback().getError(degrees);
+        final double errorDegrees = this.getHeadingError().getError(degrees);
 
         final double turnSpeed;
         final String command;
@@ -370,47 +348,16 @@ public class JvStrategy implements Strategy {
     }
 
     @Override
-    public void onXboxStart(Robot robot) {
-        return;
+    public void onXboxStart() {
     }
 
     @Override
-    public void onXboxLS(Robot robot) {
-        robot.retractPiston();
+    public void onXboxLS() {
+        this.getRobot().retractPiston();
     }
 
     @Override
-    public void onXboxRS(Robot robot) {
-        robot.pushGear();
-    }
-
-    @Override
-    public CameraData getCurrentCameraGear() {
-        return currentCameraGear;
-    }
-
-    @Override
-    public LidarData getCurrentLeftLidar() {
-        return currentLeftLidar;
-    }
-
-    @Override
-    public LidarData getCurrentRightLidar() {
-        return currentRightLidar;
-    }
-
-    @Override
-    public LidarData getCurrentRearLidar() {
-        return currentRearLidar;
-    }
-
-    @Override
-    public LidarData getCurrentFrontLidar() {
-        return currentFrontLidar;
-    }
-
-    @Override
-    public HeadingData getCurrentHeading() {
-        return currentHeading;
+    public void onXboxRS() {
+        this.getRobot().pushGear();
     }
 }

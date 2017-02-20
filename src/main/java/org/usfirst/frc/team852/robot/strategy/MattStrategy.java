@@ -7,7 +7,7 @@ import org.usfirst.frc.team852.robot.data.HeadingData;
 import org.usfirst.frc.team852.robot.data.LidarData;
 
 
-public class MattStrategy implements Strategy {
+public class MattStrategy extends Strategy {
 
     final private double DEFAULT_DELAY = 0.05;  // Default delay between movement actions
     private CameraData currentCameraGear = null;
@@ -17,65 +17,23 @@ public class MattStrategy implements Strategy {
     private LidarData currentRightLidar = null;
     private HeadingData currentHeading = null;
 
-    @Override
-    public void reset() {
-
+    public MattStrategy(final Robot robot) {
+        super(robot);
     }
 
+
     @Override
-    public void resetHeading() {
-
-    }
-
-    public void onXboxY(final Robot robot) {
-        centerWithLidar(robot);
+    public void onXboxY() {
+        this.centerWithLidar();
     }
 
     @Override
-    public void onXboxLB(Robot robot) {
-
+    public void onXboxA() {
+        this.approachGear(450);
     }
 
-    @Override
-    public void onXboxRB(Robot robot) {
-
-    }
-
-    @Override
-    public void onXboxBack(Robot robot) {
-
-    }
-
-    @Override
-    public void onXboxStart(Robot robot) {
-
-    }
-
-    @Override
-    public void onXboxLS(Robot robot) {
-
-    }
-
-    @Override
-    public void onXboxRS(Robot robot) {
-
-    }
-
-    public void onXboxX(final Robot robot) {
-
-
-    }
-
-    public void onXboxA(final Robot robot) {
-        approachGear(robot, 450);
-    }
-
-    public void onXboxB(final Robot robot) {
-
-
-    }
-
-    public void centerWithLidar(final Robot robot) {
+    public void centerWithLidar() {
+        final Robot robot = this.getRobot();
         final LidarData leftLidar = this.currentLeftLidar;
         final LidarData rightLidar = this.currentRightLidar;
         final int leftMm;
@@ -148,7 +106,9 @@ public class MattStrategy implements Strategy {
         return 0.0;
     }
 
-    public void approachGear(final Robot robot, int dist) {
+    public void approachGear(int dist) {
+        final Robot robot = this.getRobot();
+
         final LidarData leftLidar = this.currentLeftLidar;
         final LidarData rightLidar = this.currentRightLidar;
 
@@ -157,7 +117,7 @@ public class MattStrategy implements Strategy {
         robot.drive(0, 0, 0, SensorType.LIDAR_GEAR, "Stopping");  // Stop movement
 
         if (leftLidar == null || rightLidar == null) {
-            this.centerWithLidar(robot);
+            this.centerWithLidar();
         } else {
 
             int left = leftLidar.getValOnce();
@@ -165,12 +125,11 @@ public class MattStrategy implements Strategy {
             int movementDir;
 
             if ((Math.abs(left - dist) < TOLERANCE) && (Math.abs(right - dist) < TOLERANCE)) {
-                this.centerWithLidar(robot);
+                this.centerWithLidar();
                 System.out.printf("Left lidar: %s, Right lidar: %s.\n", left, right);
                 System.out.printf("Lidar sitting at dist %s\n", dist);
             } else {
-
-                this.centerWithLidar(robot);  // Make a small adjustment
+                this.centerWithLidar();  // Make a small adjustment
 
                 movementDir = (left - dist > 0 && right - dist > 0) ? 1 : -1;
 
@@ -181,8 +140,6 @@ public class MattStrategy implements Strategy {
                 robot.drive(0, yPwr, 0, DEFAULT_DELAY, SensorType.LIDAR_GEAR, String.format("Adjusting %s", movementDir > 0 ? "forwards" : "backwards"));
                 */
                 robot.drive(0, movementDir * -0.2 * (((left + right) / 2) / dist), 0, SensorType.LIDAR_GEAR, String.format("Adjusting %s", movementDir > 0 ? "forwards" : "backwards"));
-
-
             }
 
         }
@@ -191,51 +148,9 @@ public class MattStrategy implements Strategy {
 
     public void approachGear() {
 
-
     }
 
-    public void stopMovement(Robot robot) {
-        robot.drive(0, 0, 0, SensorType.LIDAR_GEAR, "Stopping");  // Stop movement
-
-    }
-
-    @Override
-    public void iterationInit(Robot robot) {
-        this.currentCameraGear = robot.cameraGearRef.get();
-        this.currentFrontLidar = robot.frontLidarRef.get();
-        this.currentRearLidar = robot.rearLidarRef.get();
-        this.currentLeftLidar = robot.leftLidarRef.get();
-        this.currentRightLidar = robot.rightLidarRef.get();
-        this.currentHeading = robot.headingRef.get();
-    }
-
-    @Override
-    public CameraData getCurrentCameraGear() {
-        return null;
-    }
-
-    @Override
-    public LidarData getCurrentLeftLidar() {
-        return null;
-    }
-
-    @Override
-    public LidarData getCurrentRightLidar() {
-        return null;
-    }
-
-    @Override
-    public LidarData getCurrentRearLidar() {
-        return null;
-    }
-
-    @Override
-    public LidarData getCurrentFrontLidar() {
-        return null;
-    }
-
-    @Override
-    public HeadingData getCurrentHeading() {
-        return null;
+    public void stopMovement() {
+        this.getRobot().drive(0, 0, 0, SensorType.LIDAR_GEAR, "Stopping");  // Stop movement
     }
 }

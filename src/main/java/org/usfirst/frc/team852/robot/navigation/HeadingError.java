@@ -1,10 +1,10 @@
 package org.usfirst.frc.team852.robot.navigation;
 
-public class HeadingFeedback {
+public class HeadingError {
 
     private final double initialHeading;
 
-    public HeadingFeedback(final double initialHeading) {
+    public HeadingError(final double initialHeading) {
         this.initialHeading = initialHeading;
     }
 
