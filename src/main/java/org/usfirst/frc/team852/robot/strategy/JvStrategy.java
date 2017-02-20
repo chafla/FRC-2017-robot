@@ -25,6 +25,9 @@ public class JvStrategy implements Strategy {
     private static final double THRESHHOLD_DEGREES = 1.5;
     private static final double PID_CORRECTION_STRAIGHT = 0.01;
     private static final double PID_CORRECTION_TURN = 0.1;
+    double x = 0;
+    double y = 0;
+    double rot = 0;
     private CameraData currentCameraGear = null;
     private LidarData currentFrontLidar = null;
     private LidarData currentRearLidar = null;
@@ -60,36 +63,36 @@ public class JvStrategy implements Strategy {
         final LidarData rightLidarData = this.currentRightLidar;
 
         if (cameraData == null) {
-            robot.logMsg(CAMERA_GEAR, "Null camera data");
+            //robot.logMsg(CAMERA_GEAR, "Null camera data");
             return;
         }
 
         if (leftLidarData == null) {
-            robot.logMsg(LIDAR_GEAR, "Null left lidar data");
+            //robot.logMsg(LIDAR_GEAR, "Null left lidar data");
             return;
         }
 
         if (rightLidarData == null) {
-            robot.logMsg(LIDAR_GEAR, "Null right lidar data");
+            //robot.logMsg(LIDAR_GEAR, "Null right lidar data");
             return;
         }
 
         if (cameraData.isInvalid()) {
-            System.out.println(cameraData.getAlreadyReadMsg());
-            robot.waitOnCameraGear(0);
-            return;
+            //System.out.println(cameraData.getAlreadyReadMsg());
+            //robot.waitOnCameraGear(100);
+            //return;
         }
 
         if (leftLidarData.isInvalid()) {
-            System.out.println(leftLidarData.getAlreadyReadMsg());
-            robot.waitOnLeftLidar(0);
-            return;
+            //System.out.println(leftLidarData.getAlreadyReadMsg());
+            //robot.waitOnLeftLidar(100);
+            //return;
         }
 
         if (rightLidarData.isInvalid()) {
-            System.out.println(rightLidarData.getAlreadyReadMsg());
-            robot.waitOnRightLidar(0);
-            return;
+            //System.out.println(rightLidarData.getAlreadyReadMsg());
+            //robot.waitOnRightLidar(100);
+            //return;
         }
 
         final int lVal = leftLidarData.getValOnce();
@@ -99,45 +102,71 @@ public class JvStrategy implements Strategy {
 
         if (xVal == -1)
             robot.logMsg(CAMERA_GEAR, "No camera data");
-        else if (xVal < (wVal / 2 - wVal * 0.1))
-            robot.drive(.3, 0, 0, CAMERA_GEAR, "move left");
-        else if (xVal > (wVal / 2 + wVal * 0.1))
-            robot.drive(-0.3, 0, 0, CAMERA_GEAR, "move right");
+        else if (xVal < (wVal / 2 - wVal * 0.1) && x != 0.3)
+            x = 0.2;
+            //robot.drive(.3, 0, 0, CAMERA_GEAR, "move left");
+        else if (xVal > (wVal / 2 + wVal * 0.1) && x != -0.3)
+            x = -0.2;
+            //robot.drive(-0.3, 0, 0, CAMERA_GEAR, "move right");
         else {
-            robot.drive(0, 0, 0, CAMERA_GEAR, "chassis centered");
-            if (xVal < (wVal / 2 - 1))
-                robot.moveRandPRight();
-            else if (xVal > (wVal / 2 + 1))
+            if (x != 0)
+                x = 0;
+            //robot.drive(0, 0, 0, CAMERA_GEAR, "chassis centered");
+            /*if (xVal < (wVal / 2 - 1))
                 robot.moveRandPLeft();
+            else if (xVal > (wVal / 2 + 1))
+                robot.moveRandPRight();
             else
-                robot.stopRandP();
+                robot.stopRandP();*/
         }
 
         if (leftLidarData.getValOnce() == -1 || rightLidarData.getValOnce() == -1) {
             robot.logMsg(LIDAR_GEAR, "Out of range");
         } else if (lVal > rVal + 10) {
-            if (lVal > 320 && rVal > 320)
-                robot.drive(0, -0.2, -0.2, LIDAR_GEAR, "clockwise and forward");
-            else if (lVal < 280 && rVal < 280)
-                robot.drive(0, 0.2, -0.2, LIDAR_GEAR, "clockwise and backward");
-            else
-                robot.drive(0, 0, -0.2, LIDAR_GEAR, "clockwise");
+            if (rot != 0.1)
+                rot = 0.1;
+            if (lVal > 520 && rVal > 520 && y != -0.2)
+                y = -0.2;
+                //robot.drive(0, -0.2, -0.2, LIDAR_GEAR, "clockwise and forward");
+            else if (lVal < 480 && rVal < 480 && y != 0.2)
+                y = 0.2;
+                //robot.drive(0, 0.2, -0.2, LIDAR_GEAR, "clockwise and backward");
+            else {
+                if (y != 0)
+                    y = 0;
+                //robot.drive(0, 0, -0.2, LIDAR_GEAR, "clockwise");
+            }
         } else if (lVal < rVal - 10) {
-            if (lVal > 320 && rVal > 320)
-                robot.drive(0, -0.2, 0.2, LIDAR_GEAR, "counter-clockwise and forward");
-            else if (lVal < 280 && rVal < 280)
-                robot.drive(0, 0.2, 0.2, LIDAR_GEAR, "counter-clockwise and backward");
-            else
-                robot.drive(0, 0, 0.2, LIDAR_GEAR, "counter-clockwise");
+            if (rot != -0.1)
+                rot = -0.1;
+            if (lVal > 520 && rVal > 520 && y != -0.2)
+                y = -0.2;
+                //robot.drive(0, -0.2, 0.2, LIDAR_GEAR, "counter-clockwise and forward");
+            else if (lVal < 480 && rVal < 480 && y != 0.2)
+                y = 0.2;
+                //robot.drive(0, 0.2, 0.2, LIDAR_GEAR, "counter-clockwise and backward");
+            else {
+                if (y != 0)
+                    y = 0;
+                //robot.drive(0, 0, 0.2, LIDAR_GEAR, "counter-clockwise");
+            }
         } else {
-            if (lVal > 320 && rVal > 320)
-                robot.drive(0, -0.2, 0, LIDAR_GEAR, "forward");
-            else if (lVal < 290 && rVal < 290)
-                robot.drive(0, 0.2, 0, LIDAR_GEAR, "backward");
-            else
-                robot.drive(0, 0, 0, LIDAR_GEAR, "centered");
+            if (rot != 0)
+                rot = 0;
+            if (lVal > 520 && rVal > 520 && y != -0.2)
+                y = -0.2;
+                //robot.drive(0, -0.2, 0, LIDAR_GEAR, "forward");
+            else if (lVal < 480 && rVal < 480 && y != 0.2)
+                y = 0.2;
+                //robot.drive(0, 0.2, 0, LIDAR_GEAR, "backward");
+            else {
+                if (y != 0)
+                    y = 0;
+                //robot.drive(0, 0, 0, LIDAR_GEAR, "centered");
+            }
         }
-
+        System.out.println(x + " " + y + " " + rot);
+        robot.drive(x, y, rot, CAMERA_GEAR, "Log");
     }
 
     @Override
@@ -342,7 +371,7 @@ public class JvStrategy implements Strategy {
 
     @Override
     public void onXboxStart(Robot robot) {
-        robot.climb();
+        return;
     }
 
     @Override

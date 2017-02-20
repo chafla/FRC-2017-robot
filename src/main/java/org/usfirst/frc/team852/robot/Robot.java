@@ -332,15 +332,8 @@ public class Robot extends SampleRobot {
             }
             else if (this.xbox.getRawButton(XBOX_Back))
                 this.strategy.onXboxBack(this);
-            else if (this.xbox.getRawButton(XBOX_Start)) {
-                if (!climberToggle) {
-                    this.strategy.onXboxStart(this);
-                    climberToggle = true;
-                } else {
-                    this.climber.set(0);
-                    climberToggle = false;
-                }
-            }
+            else if (this.xbox.getRawButton(XBOX_Start))
+                this.strategy.onXboxStart(this);
             else if (this.xbox.getRawButton(XBOX_LS))
                 this.strategy.onXboxLS(this);
             else if (this.xbox.getRawButton(XBOX_RS))
@@ -348,6 +341,8 @@ public class Robot extends SampleRobot {
 
             if (xbox.getRawAxis(3) > 0.05)
                 controlledClimb(xbox.getRawAxis(3));
+            else
+                controlledClimb(0);
 
             // NOTE! Left/right movement may be reversed, may need to modify signs!
 
@@ -363,15 +358,17 @@ public class Robot extends SampleRobot {
             // that is why joysticks do it that way.)
 
             // Velocity drive needs a larger deadzone, and we can't extend Joystick.
-            if (this.stick1.getZ() < 0)
-                this.robotDrive.mecanumDrive_Cartesian(this.adjustDeadzone(this.stick1.getX()),
-                                                       -this.adjustDeadzone(this.stick1.getY()),
-                                                       this.adjustDeadzone(this.stick2.getX()),
-                                                       0);
-            else
-                this.robotDrive.mecanumDrive_Cartesian((this.adjustDeadzone(this.stick1.getX()) + this.adjustDeadzone(this.stick2.getX())) / 2,
-                                                       (this.adjustDeadzone(stick1.getY()) + this.adjustDeadzone(this.stick2.getY())) / 2,
-                                                       (this.adjustDeadzone(this.stick2.getY()) - this.adjustDeadzone(this.stick1.getY())) / 2, 0);
+            if (!this.xbox.getRawButton(XBOX_A)) {
+                if (this.stick1.getZ() < 0)
+                    this.robotDrive.mecanumDrive_Cartesian(this.adjustDeadzone(this.stick1.getX()),
+                            -this.adjustDeadzone(this.stick1.getY()),
+                            this.adjustDeadzone(this.stick2.getX()),
+                            0);
+                else
+                    this.robotDrive.mecanumDrive_Cartesian((this.adjustDeadzone(this.stick1.getX()) + this.adjustDeadzone(this.stick2.getX())) / 2,
+                            (this.adjustDeadzone(stick1.getY()) + this.adjustDeadzone(this.stick2.getY())) / 2,
+                            (this.adjustDeadzone(this.stick2.getY()) - this.adjustDeadzone(this.stick1.getY())) / 2, 0);
+            }
             Timer.delay(0.005); // wait 5ms to avoid hogging CPU cycles
         }
     }
@@ -482,8 +479,6 @@ public class Robot extends SampleRobot {
                       final String logMsg) {
         this.logMsg(sensorType, logMsg);
         this.robotDrive.mecanumDrive_Cartesian(x, y, rot, 0);
-        //Timer.delay(delay);
-        //this.robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
     }
 
     public void pushGear() {
