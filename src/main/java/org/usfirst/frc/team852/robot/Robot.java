@@ -4,6 +4,7 @@ import com.ctre.CANTalon;
 import com.ctre.CANTalon.FeedbackDevice;
 import com.ctre.CANTalon.TalonControlMode;
 import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
 import org.athenian.BaseMqttCallback;
 import org.athenian.Utils;
@@ -81,6 +82,7 @@ public class Robot extends SampleRobot {
     private final DoubleSolenoid piston = new DoubleSolenoid(0, 1);
     private final DigitalInput rightLimitSwitch = new DigitalInput(0);
     private final DigitalInput leftLimitSwitch = new DigitalInput(1);
+    private final Encoder encoder = new Encoder(2, 3);
     private final Relay ring = new Relay(0);
     private final Joystick stick1 = new Joystick(0);
     private final Joystick stick2 = new Joystick(1);
@@ -107,6 +109,7 @@ public class Robot extends SampleRobot {
         this.piston.set(DoubleSolenoid.Value.kReverse);
         this.climber.set(0);
         this.rackAndPinion.set(0);
+        encoder.setDistancePerPulse(0.004750300583992);
 
         this.robotDrive = new RobotDrive(this.frontLeft, this.rearLeft, this.frontRight, this.rearRight);
 
@@ -208,8 +211,20 @@ public class Robot extends SampleRobot {
      */
     @Override
     public void autonomous() {
+        while (isEnabled() && isAutonomous()) {
 
 
+        }
+    }
+
+    @Override
+    public void disabled() {
+        rackAndPinion.set(0);
+        climber.set(0);
+        frontLeft.set(0);
+        frontRight.set(0);
+        rearLeft.set(0);
+        rearRight.set(0);
     }
 
     /*
@@ -274,7 +289,6 @@ public class Robot extends SampleRobot {
         boolean speedMode = false;
         boolean goRight = true;
 
-        this.ring.set(Relay.Value.kForward);
         this.piston.set(DoubleSolenoid.Value.kReverse);
 
         while (isOperatorControl() && isEnabled()) {
@@ -317,6 +331,20 @@ public class Robot extends SampleRobot {
                 controlledClimb(this.xbox.getRawAxis(3));
             else
                 controlledClimb(0);
+
+            if (!this.xbox.getRawButton(XBOX_A) || !this.xbox.getRawButton(XBOX_LB) || !this.xbox.getRawButton(XBOX_RB))
+                this.rackAndPinion.set(0);
+
+            if (stick1.getRawButton(8)) {
+                ring.set(Relay.Value.kReverse);
+                /*System.out.println(ring.get());
+                if (ring.get() == Relay.Value.kReverse)
+                    ring.set(Relay.Value.kOff);
+                else
+                    ring.set(Relay.Value.kReverse);*/
+            }
+            if (stick1.getRawButton(9))
+                centerRandP();
 
             // NOTE! Left/right movement may be reversed, may need to modify signs!
 
@@ -390,12 +418,31 @@ public class Robot extends SampleRobot {
         this.rackAndPinion.set(0);
     }
 
+    public void centerRandP() {
+        System.out.println(this.encoder.getDistance());
+        if (this.leftLimitSwitch.get()) {
+            this.rackAndPinion.set(-0.5);
+            while (this.leftLimitSwitch.get() && isEnabled()) ;
+            this.rackAndPinion.set(0);
+        }
+        System.out.println(this.encoder.getDistance());
+        encoder.reset();
+        this.rackAndPinion.set(0.5);
+        while (isEnabled() && encoder.getDistance() > -1.8 && this.rightLimitSwitch.get()) ;
+        this.rackAndPinion.set(0);
+        System.out.println(this.encoder.getDistance());
+    }
+
     public void climb() {
         this.climber.set(1);
     }
 
     public void controlledClimb(double power) {
         this.climber.set(power);
+    }
+
+    public void rumble(double power) {
+        this.xbox.setRumble(RumbleType.kRightRumble, power);
     }
 
     public void logMsg(final SensorType sensorType, final String desc) {

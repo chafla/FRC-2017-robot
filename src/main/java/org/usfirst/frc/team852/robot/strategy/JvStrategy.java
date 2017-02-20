@@ -17,6 +17,12 @@ public class JvStrategy extends Strategy {
     private double x = 0;
     private double y = 0;
     private double rot = 0;
+    private static final double frontTarget = 10;
+    private static final double rearTarget = 10;
+    private static final double turn = 45;
+    private static final int upperLidarThreshold = 525;
+    private static final int lowerLidarThreshold = 475;
+
 
     public JvStrategy(final Robot robot) {
         super(robot);
@@ -37,109 +43,92 @@ public class JvStrategy extends Strategy {
         final LidarData rightLidarData = this.getCurrentRightLidar();
 
         if (cameraData == null) {
+            robot.rumble(1);
             robot.logMsg(CAMERA_GEAR, "Null camera data");
             return;
         }
 
         if (leftLidarData == null) {
+            robot.rumble(1);
             robot.logMsg(LIDAR_GEAR, "Null left lidar data");
             return;
         }
 
         if (rightLidarData == null) {
+            robot.rumble(1);
             robot.logMsg(LIDAR_GEAR, "Null right lidar data");
             return;
         }
-
-        if (cameraData.isInvalid()) {
-            //System.out.println(cameraData.getAlreadyReadMsg());
-            //robot.waitOnCameraGear(100);
-            //return;
-        }
-
-        if (leftLidarData.isInvalid()) {
-            //System.out.println(leftLidarData.getAlreadyReadMsg());
-            //robot.waitOnLeftLidar(100);
-            //return;
-        }
-
-        if (rightLidarData.isInvalid()) {
-            //System.out.println(rightLidarData.getAlreadyReadMsg());
-            //robot.waitOnRightLidar(100);
-            //return;
-        }
-
+        robot.rumble(0);
         final int lVal = leftLidarData.getValOnce();
         final int rVal = rightLidarData.getValOnce();
         final int xVal = cameraData.getValOnce();
         final int wVal = cameraData.getWidth();
 
-        if (xVal == -1)
+        if (xVal == -1) {
             robot.logMsg(CAMERA_GEAR, "No camera data");
-        else if (xVal < (wVal / 2 - wVal * 0.1) && x != 0.3)
-            x = 0.2;
-            //robot.drive(.3, 0, 0, CAMERA_GEAR, "move left");
-        else if (xVal > (wVal / 2 + wVal * 0.1) && x != -0.3)
-            x = -0.2;
-            //robot.drive(-0.3, 0, 0, CAMERA_GEAR, "move right");
+            robot.rumble(1);
+        } else if (xVal < (wVal / 2 - wVal * 0.075)) {
+            x = 0.15;
+            robot.stopRandP();
+        } else if (xVal > (wVal / 2 + wVal * 0.075)) {
+            x = -0.15;
+            robot.stopRandP();
+        }
         else {
             if (x != 0)
                 x = 0;
-            //robot.drive(0, 0, 0, CAMERA_GEAR, "chassis centered");
-            if (xVal < (wVal / 2 - 1))
-                robot.moveRandPLeft();
-            else if (xVal > (wVal / 2 + 1))
-                robot.moveRandPRight();
-            else
-                robot.stopRandP();
         }
 
         if (leftLidarData.getValOnce() == -1 || rightLidarData.getValOnce() == -1) {
             robot.logMsg(LIDAR_GEAR, "Out of range");
+            robot.rumble(1);
         } else if (lVal > rVal + 10) {
             if (rot != 0.1)
                 rot = 0.1;
-            if (lVal > 520 && rVal > 520 && y != -0.2)
-                y = -0.2;
-                //robot.drive(0, -0.2, -0.2, LIDAR_GEAR, "clockwise and forward");
-            else if (lVal < 480 && rVal < 480 && y != 0.2)
-                y = 0.2;
-                //robot.drive(0, 0.2, -0.2, LIDAR_GEAR, "clockwise and backward");
+            if (lVal > upperLidarThreshold && rVal > upperLidarThreshold && y != -0.15)
+                y = -0.15;
+            else if (lVal < lowerLidarThreshold && rVal < lowerLidarThreshold && y != 0.15)
+                y = 0.15;
             else {
                 if (y != 0)
                     y = 0;
-                //robot.drive(0, 0, -0.2, LIDAR_GEAR, "clockwise");
             }
         } else if (lVal < rVal - 10) {
             if (rot != -0.1)
                 rot = -0.1;
-            if (lVal > 520 && rVal > 520 && y != -0.2)
-                y = -0.2;
-                //robot.drive(0, -0.2, 0.2, LIDAR_GEAR, "counter-clockwise and forward");
-            else if (lVal < 480 && rVal < 480 && y != 0.2)
-                y = 0.2;
-                //robot.drive(0, 0.2, 0.2, LIDAR_GEAR, "counter-clockwise and backward");
+            if (lVal > upperLidarThreshold && rVal > upperLidarThreshold && y != -0.15)
+                y = -0.15;
+            else if (lVal < lowerLidarThreshold && rVal < lowerLidarThreshold && y != 0.15)
+                y = 0.15;
             else {
                 if (y != 0)
                     y = 0;
-                //robot.drive(0, 0, 0.2, LIDAR_GEAR, "counter-clockwise");
             }
         } else {
             if (rot != 0)
                 rot = 0;
-            if (lVal > 520 && rVal > 520 && y != -0.2)
-                y = -0.2;
-                //robot.drive(0, -0.2, 0, LIDAR_GEAR, "forward");
-            else if (lVal < 480 && rVal < 480 && y != 0.2)
-                y = 0.2;
-                //robot.drive(0, 0.2, 0, LIDAR_GEAR, "backward");
+            if (lVal > upperLidarThreshold && rVal > upperLidarThreshold && y != -0.15)
+                y = -0.15;
+            else if (lVal < lowerLidarThreshold && rVal < lowerLidarThreshold && y != 0.15)
+                y = 0.15;
             else {
                 if (y != 0)
                     y = 0;
-                //robot.drive(0, 0, 0, LIDAR_GEAR, "centered");
             }
         }
+
         robot.drive(x, y, rot, CAMERA_GEAR, x + " " + y + " " + rot);
+        robot.rumble(0);
+
+        if (x == 0 && y == 0 && rot == 0) {
+            if (xVal < (wVal / 2 - 1))
+                robot.moveRandPRight();
+            else if (xVal > (wVal / 2 + 1))
+                robot.moveRandPLeft();
+            else
+                robot.stopRandP();
+        }
     }
 
     @Override
@@ -318,7 +307,6 @@ public class JvStrategy extends Strategy {
         }
 
         final double degrees = headingData.getDegreesOnce();
-        final double turn = 45;
 
         // This will be set the first time through
         if (this.getHeadingError() == null)
@@ -331,16 +319,16 @@ public class JvStrategy extends Strategy {
         if (errorDegrees > THRESHHOLD_DEGREES) {
             // veered right, turn left, turnSpeed will be no less than -1
             turnSpeed = Math.max(-errorDegrees * PID_CORRECTION_TURN, -0.2);
-            command = "Forward and counter-clockwise";
+            command = "Counter-clockwise";
 
         } else if (errorDegrees < (THRESHHOLD_DEGREES * -1)) {
             // veered left, turn right, turnSpeed will be no more 1
             turnSpeed = Math.min(-errorDegrees * PID_CORRECTION_TURN, 0.2);
-            command = "Forward and clockwise";
+            command = "Clockwise";
         } else {
             // On course, drive straight.
             turnSpeed = 0;
-            command = "Centered";
+            command = "Aligned";
         }
 
         robot.drive(0, 0, turnSpeed, HEADING, command);
@@ -348,6 +336,122 @@ public class JvStrategy extends Strategy {
 
     @Override
     public void onXboxStart() {
+        // autonomous
+        final Robot robot = this.getRobot();
+        final HeadingData headingData = this.getCurrentHeading();
+        final LidarData frontLidarData = this.getCurrentFrontLidar();
+        final LidarData rearLidarData = this.getCurrentRearLidar();
+        final LidarData leftLidarData = this.getCurrentLeftLidar();
+        final LidarData rightLidarData = this.getCurrentRightLidar();
+
+        if (leftLidarData == null) {
+            robot.logMsg(LIDAR_GEAR, "Null left lidar data");
+            return;
+        }
+        if (rightLidarData == null) {
+            robot.logMsg(LIDAR_GEAR, "Null right lidar data");
+            return;
+        }
+        if (headingData == null) {
+            robot.logMsg(HEADING, "Null heading data");
+            return;
+        }
+        if (frontLidarData == null) {
+            robot.logMsg(HEADING, "Null heading data");
+            return;
+        }
+        if (rearLidarData == null) {
+            robot.logMsg(HEADING, "Null heading data");
+            return;
+        }
+
+        final double fVal = frontLidarData.getValOnce();
+        final double bVal = rearLidarData.getValOnce();
+        final int lVal = leftLidarData.getValOnce();
+        final int rVal = rightLidarData.getValOnce();
+
+        final double degrees = headingData.getDegreesOnce();
+        // This will be set the first time through
+        if (this.getHeadingError() == null)
+            this.setHeadingError(new HeadingError(degrees));
+
+        final double errorDegrees = this.getHeadingError().getError(degrees);
+
+        final double turnSpeed;
+        final String command;
+        if (fVal > frontTarget && bVal < rearTarget) {
+            if (errorDegrees > THRESHHOLD_DEGREES) {
+                // veered right, turn left, turnSpeed will be no less than -1
+                turnSpeed = Math.max(-errorDegrees * PID_CORRECTION_STRAIGHT, -0.2);
+                command = "Forward and counter-clockwise";
+
+            } else if (errorDegrees < (THRESHHOLD_DEGREES * -1)) {
+                // veered left, turn right, turnSpeed will be no more 1
+                turnSpeed = Math.min(-errorDegrees * PID_CORRECTION_STRAIGHT, 0.2);
+                command = "Forward and clockwise";
+            } else {
+                // On course, drive straight.
+                turnSpeed = 0;
+                command = "Forward";
+            }
+            robot.logMsg(HEADING, "error: " + errorDegrees + " turn speed: " + turnSpeed);
+            robot.drive(0, -0.3, turnSpeed, HEADING, command);
+            return;
+        }
+
+        if (false)//first time through
+            this.setHeadingError(null);
+
+        if (this.getHeadingError() == null)
+            this.setHeadingError(new HeadingError(degrees + turn));
+
+        if (errorDegrees > THRESHHOLD_DEGREES || errorDegrees < -THRESHHOLD_DEGREES) {
+            if (errorDegrees > THRESHHOLD_DEGREES) {
+                // veered right, turn left, turnSpeed will be no less than -1
+                turnSpeed = Math.max(-errorDegrees * PID_CORRECTION_STRAIGHT, -0.2);
+                command = "Counter-clockwise";
+
+            } else if (errorDegrees < (THRESHHOLD_DEGREES * -1)) {
+                // veered left, turn right, turnSpeed will be no more 1
+                turnSpeed = Math.min(-errorDegrees * PID_CORRECTION_STRAIGHT, 0.2);
+                command = "Clockwise";
+            } else {
+                // On course, drive straight.
+                turnSpeed = 0;
+                command = "Aligned";
+            }
+
+            robot.drive(0, 0, turnSpeed, HEADING, command);
+            return;
+        }
+
+        if (false)// first time through
+            resetHeadingError();
+
+        if (rVal == -1 && lVal == -1) {
+            if (errorDegrees > THRESHHOLD_DEGREES) {
+                // veered right, turn left, turnSpeed will be no less than -1
+                turnSpeed = Math.max(-errorDegrees * PID_CORRECTION_STRAIGHT, -0.2);
+                command = "Forward and counter-clockwise";
+
+            } else if (errorDegrees < (THRESHHOLD_DEGREES * -1)) {
+                // veered left, turn right, turnSpeed will be no more 1
+                turnSpeed = Math.min(-errorDegrees * PID_CORRECTION_STRAIGHT, 0.2);
+                command = "Forward and clockwise";
+            } else {
+                // On course, drive straight.
+                turnSpeed = 0;
+                command = "Forward";
+            }
+            robot.logMsg(HEADING, "error: " + errorDegrees + " turn speed: " + turnSpeed);
+            robot.drive(0, -0.3, turnSpeed, HEADING, command);
+            return;
+        }
+
+        this.onXboxA();
+
+
+
     }
 
     @Override
