@@ -211,6 +211,7 @@ public class Robot extends SampleRobot {
      */
     @Override
     public void autonomous() {
+        ring.set(Relay.Value.kReverse);
         while (isEnabled() && isAutonomous()) {
 
 
@@ -225,6 +226,7 @@ public class Robot extends SampleRobot {
         frontRight.set(0);
         rearLeft.set(0);
         rearRight.set(0);
+        this.rumble(0);
     }
 
     /*
@@ -285,11 +287,8 @@ public class Robot extends SampleRobot {
 		 * For normal mode (false), sets talon control mode to %vbus and max output to 1.0.
 		 */
 
-        boolean s2button1 = false;
-        boolean speedMode = false;
-        boolean goRight = true;
-
         this.piston.set(DoubleSolenoid.Value.kReverse);
+        ring.set(Relay.Value.kReverse);
 
         while (isOperatorControl() && isEnabled()) {
             // Use the joystick X axis for lateral movement, Y axis for forward
@@ -332,17 +331,11 @@ public class Robot extends SampleRobot {
             else
                 controlledClimb(0);
 
-            if (!this.xbox.getRawButton(XBOX_A) || !this.xbox.getRawButton(XBOX_LB) || !this.xbox.getRawButton(XBOX_RB))
+            if (!this.xbox.getRawButton(XBOX_A) || !this.xbox.getRawButton(XBOX_LB) || !this.xbox.getRawButton(XBOX_RB)) {
                 this.rackAndPinion.set(0);
-
-            if (stick1.getRawButton(8)) {
-                ring.set(Relay.Value.kReverse);
-                /*System.out.println(ring.get());
-                if (ring.get() == Relay.Value.kReverse)
-                    ring.set(Relay.Value.kOff);
-                else
-                    ring.set(Relay.Value.kReverse);*/
+                this.rumble(0);
             }
+
             if (stick1.getRawButton(9))
                 centerRandP();
 
@@ -442,7 +435,7 @@ public class Robot extends SampleRobot {
     }
 
     public void rumble(double power) {
-        this.xbox.setRumble(RumbleType.kRightRumble, power);
+        this.xbox.setRumble(RumbleType.kLeftRumble, power);
     }
 
     public void logMsg(final SensorType sensorType, final String desc) {
