@@ -212,10 +212,8 @@ public class Robot extends SampleRobot {
     @Override
     public void autonomous() {
         ring.set(Relay.Value.kReverse);
-        while (isEnabled() && isAutonomous()) {
-
-
-        }
+        while (isEnabled() && isAutonomous())
+            this.strategy.onXboxStart();
     }
 
     @Override

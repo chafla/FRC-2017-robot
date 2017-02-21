@@ -22,6 +22,7 @@ public class JvStrategy extends Strategy {
     private static final double turn = 45;
     private static final int upperLidarThreshold = 525;
     private static final int lowerLidarThreshold = 475;
+    private static boolean hasTurned = false;
 
 
     public JvStrategy(final Robot robot) {
@@ -34,7 +35,7 @@ public class JvStrategy extends Strategy {
         this.resetHeadingError();
     }
 
-    // consider renaming these methods
+    // align robot with peg
     @Override
     public void onXboxA() {
         final Robot robot = this.getRobot();
@@ -59,7 +60,7 @@ public class JvStrategy extends Strategy {
             robot.logMsg(LIDAR_GEAR, "Null right lidar data");
             return;
         }
-        robot.rumble(0);
+
         final int lVal = leftLidarData.getValOnce();
         final int rVal = rightLidarData.getValOnce();
         final int xVal = cameraData.getValOnce();
@@ -131,6 +132,7 @@ public class JvStrategy extends Strategy {
         }
     }
 
+    // camera alignment
     @Override
     public void onXboxB() {
         final Robot robot = this.getRobot();
@@ -160,6 +162,7 @@ public class JvStrategy extends Strategy {
             robot.drive(0, 0, 0, CAMERA_GEAR, "chassis centered");
     }
 
+    // go forward with corrections from heading
     @Override
     public void onXboxX() {
         final Robot robot = this.getRobot();
@@ -205,6 +208,7 @@ public class JvStrategy extends Strategy {
         robot.drive(0, -0.3, turnSpeed, HEADING, command);
     }
 
+    // lidar alignment
     @Override
     public void onXboxY() {
         final Robot robot = this.getRobot();
@@ -280,16 +284,19 @@ public class JvStrategy extends Strategy {
         */
     }
 
+    // move rack and pinion left
     @Override
     public void onXboxLB() {
         this.getRobot().moveRandPLeft();
     }
 
+    // move rack and pinion right
     @Override
     public void onXboxRB() {
         this.getRobot().moveRandPRight();
     }
 
+    // turn using heading
     @Override
     public void onXboxBack() {
         final Robot robot = this.getRobot();
@@ -334,16 +341,21 @@ public class JvStrategy extends Strategy {
         robot.drive(0, 0, turnSpeed, HEADING, command);
     }
 
+    // autonomous method
     @Override
     public void onXboxStart() {
-        // autonomous
         final Robot robot = this.getRobot();
+        final CameraData cameraData = this.getCurrentCameraGear();
         final HeadingData headingData = this.getCurrentHeading();
         final LidarData frontLidarData = this.getCurrentFrontLidar();
         final LidarData rearLidarData = this.getCurrentRearLidar();
         final LidarData leftLidarData = this.getCurrentLeftLidar();
         final LidarData rightLidarData = this.getCurrentRightLidar();
 
+        if (cameraData == null) {
+            robot.logMsg(CAMERA_GEAR, "Null camera data");
+            return;
+        }
         if (leftLidarData == null) {
             robot.logMsg(LIDAR_GEAR, "Null left lidar data");
             return;
@@ -369,6 +381,8 @@ public class JvStrategy extends Strategy {
         final double bVal = rearLidarData.getValOnce();
         final int lVal = leftLidarData.getValOnce();
         final int rVal = rightLidarData.getValOnce();
+        final int xVal = cameraData.getValOnce();
+        final int wVal = cameraData.getWidth();
 
         final double degrees = headingData.getDegreesOnce();
         // This will be set the first time through
@@ -399,11 +413,7 @@ public class JvStrategy extends Strategy {
             return;
         }
 
-        if (false)//first time through
-            this.setHeadingError(null);
-
-        if (this.getHeadingError() == null)
-            this.setHeadingError(new HeadingError(degrees + turn));
+        this.setHeadingError(new HeadingError(degrees + turn));
 
         if (errorDegrees > THRESHHOLD_DEGREES || errorDegrees < -THRESHHOLD_DEGREES) {
             if (errorDegrees > THRESHHOLD_DEGREES) {
@@ -425,8 +435,10 @@ public class JvStrategy extends Strategy {
             return;
         }
 
-        if (false)// first time through
+        if (!hasTurned) {
             resetHeadingError();
+            hasTurned = true;
+        }
 
         if (rVal == -1 && lVal == -1) {
             if (errorDegrees > THRESHHOLD_DEGREES) {
@@ -448,17 +460,80 @@ public class JvStrategy extends Strategy {
             return;
         }
 
-        this.onXboxA();
+        if ((xVal < (wVal / 2 - wVal * 0.075) || xVal > (wVal / 2 + wVal * 0.075)) && lVal != -1 && rVal != -1) {
+            if (xVal == -1) {
+                robot.logMsg(CAMERA_GEAR, "No camera data");
+                robot.rumble(1);
+            } else if (xVal < (wVal / 2 - wVal * 0.075)) {
+                x = 0.15;
+                robot.stopRandP();
+            } else if (xVal > (wVal / 2 + wVal * 0.075)) {
+                x = -0.15;
+                robot.stopRandP();
+            } else {
+                if (x != 0)
+                    x = 0;
+            }
 
+            if (lVal > rVal + 10) {
+                if (rot != 0.1)
+                    rot = 0.1;
+                if (lVal > upperLidarThreshold && rVal > upperLidarThreshold && y != -0.15)
+                    y = -0.15;
+                else if (lVal < lowerLidarThreshold && rVal < lowerLidarThreshold && y != 0.15)
+                    y = 0.15;
+                else {
+                    if (y != 0)
+                        y = 0;
+                }
+            } else if (lVal < rVal - 10) {
+                if (rot != -0.1)
+                    rot = -0.1;
+                if (lVal > upperLidarThreshold && rVal > upperLidarThreshold && y != -0.15)
+                    y = -0.15;
+                else if (lVal < lowerLidarThreshold && rVal < lowerLidarThreshold && y != 0.15)
+                    y = 0.15;
+                else {
+                    if (y != 0)
+                        y = 0;
+                }
+            } else {
+                if (rot != 0)
+                    rot = 0;
+                if (lVal > upperLidarThreshold && rVal > upperLidarThreshold && y != -0.15)
+                    y = -0.15;
+                else if (lVal < lowerLidarThreshold && rVal < lowerLidarThreshold && y != 0.15)
+                    y = 0.15;
+                else {
+                    if (y != 0)
+                        y = 0;
+                }
+            }
 
+            robot.drive(x, y, rot, CAMERA_GEAR, x + " " + y + " " + rot);
 
+            if (x == 0 && y == 0 && rot == 0) {
+                if (xVal < (wVal / 2 - 1))
+                    robot.moveRandPRight();
+                else if (xVal > (wVal / 2 + 1))
+                    robot.moveRandPLeft();
+                else
+                    robot.stopRandP();
+            }
+            return;
+        }
+        robot.pushGear();
+        edu.wpi.first.wpilibj.Timer.delay(0.5);
+        robot.retractPiston();
     }
 
+    // retract piston
     @Override
     public void onXboxLS() {
         this.getRobot().retractPiston();
     }
 
+    // push gear
     @Override
     public void onXboxRS() {
         this.getRobot().pushGear();
