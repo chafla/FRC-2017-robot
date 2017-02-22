@@ -462,46 +462,27 @@ public class JvStrategy extends Strategy {
             robot.drive(0, -0.5, turnSpeed, HEADING, command);
             return;
         }
-
+        // change to drive using heading not lidar
         if (lVal > 510 && rVal > 510) {
 
-            if (lVal > rVal + 10) {
-                if (rot != 0.1)
-                    rot = 0.1;
-                if (lVal > upperLidarThreshold && rVal > upperLidarThreshold && y != -0.15)
-                    y = -0.15;
-                else if (lVal < lowerLidarThreshold && rVal < lowerLidarThreshold && y != 0.15)
-                    y = 0.15;
-                else {
-                    if (y != 0)
-                        y = 0;
-                }
-            } else if (lVal < rVal - 10) {
-                if (rot != -0.1)
-                    rot = -0.1;
-                if (lVal > upperLidarThreshold && rVal > upperLidarThreshold && y != -0.15)
-                    y = -0.15;
-                else if (lVal < lowerLidarThreshold && rVal < lowerLidarThreshold && y != 0.15)
-                    y = 0.15;
-                else {
-                    if (y != 0)
-                        y = 0;
-                }
-            } else {
-                if (rot != 0)
-                    rot = 0;
-                if (lVal > upperLidarThreshold && rVal > upperLidarThreshold && y != -0.15)
-                    y = -0.15;
-                else if (lVal < lowerLidarThreshold && rVal < lowerLidarThreshold && y != 0.15)
-                    y = 0.15;
-                else {
-                    if (y != 0)
-                        y = 0;
-                }
-            }
-            robot.drive(0, y, rot, CAMERA_GEAR, x + " " + y + " " + rot);
+            if (errorDegrees > THRESHHOLD_DEGREES) {
+                // veered right, turn left, turnSpeed will be no less than -1
+                turnSpeed = Math.max(-errorDegrees * PID_CORRECTION_STRAIGHT, -0.2);
+                command = "Forward and counter-clockwise";
 
+            } else if (errorDegrees < (THRESHHOLD_DEGREES * -1)) {
+                // veered left, turn right, turnSpeed will be no more 1
+                turnSpeed = Math.min(-errorDegrees * PID_CORRECTION_STRAIGHT, 0.2);
+                command = "Forward and clockwise";
+            } else {
+                // On course, drive straight.
+                turnSpeed = 0;
+                command = "Forward";
+            }
+            robot.logMsg(HEADING, "error: " + errorDegrees + " turn speed: " + turnSpeed);
+            robot.drive(0, -0.5 * (lVal + rVal) / 2000, turnSpeed, HEADING, command);
             return;
+
         }
 
         if (xVal < (wVal / 2 - wVal * 0.075) || xVal > (wVal / 2 + wVal * 0.075)) {
