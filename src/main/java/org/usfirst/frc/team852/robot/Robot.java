@@ -22,6 +22,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.String.format;
+import static org.usfirst.frc.team852.robot.Constants.*;
 
 //import org.eclipse.paho.client.mqttv3.MqttException;
 
@@ -148,7 +149,7 @@ public class Robot extends SampleRobot {
                     continue;
                 }
 
-                this.mqttClientRef.get().setCallback(
+                this.getMqttClient().setCallback(
                         new BaseMqttCallback() {
                             @Override
                             public void connectComplete(boolean reconnect, String url) {
@@ -159,7 +160,7 @@ public class Robot extends SampleRobot {
 
                 try {
                     System.out.println(format("Connecting to MQTT broker at %s...", url));
-                    this.mqttClientRef.get().connect(opts);
+                    this.getMqttClient().connect(opts);
                     System.out.println(format("Connected to MQTT broker at %s", url));
                     break;
                 }
@@ -174,6 +175,35 @@ public class Robot extends SampleRobot {
                 }
             }
         });
+    }
+
+    public void enableShortLidar(final boolean enabled) {
+        this.publish(LEFT_LIDAR_COMMAND, enabled);
+        this.publish(RIGHT_LIDAR_COMMAND, enabled);
+    }
+
+    public void enableLongLidar(final boolean enabled) {
+        this.publish(FRONT_LIDAR_COMMAND, enabled);
+        this.publish(REAR_LIDAR_COMMAND, enabled);
+    }
+
+    public void enableHeading(final boolean enabled) {
+        this.publish(HEADING_COMMAND, enabled);
+    }
+
+    public void enableCamera(final boolean enabled) {
+        this.publish(CAMERA_COMMAND, enabled);
+    }
+
+    private void publish(final String topic, final boolean enabled) {
+        if (this.getMqttClient() != null) {
+            try {
+                this.getMqttClient().publish(topic, new MqttMessage((enabled ? "ON" : "OFF").getBytes()));
+            }
+            catch (MqttException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void initAllTalons() {
@@ -483,7 +513,7 @@ public class Robot extends SampleRobot {
                                  }
                              });
 
-            client.subscribe(Constants.REAR_LIDAR_TOPIC,
+            client.subscribe(REAR_LIDAR_TOPIC,
                              (topic, msg) -> {
                                  final int dist = Integer.parseInt(new String(msg.getPayload()));
                                  this.strategy.getRearLidarRef().set(new LidarData(DataType.RearLidar, dist));
