@@ -249,8 +249,15 @@ public class Robot extends SampleRobot {
     @Override
     public void autonomous() {
         ring.set(Relay.Value.kReverse);
-        while (isEnabled() && isAutonomous())
-            this.strategy.onXboxStart();
+
+        // distance is in cm
+        this.strategy.goByRear(244);
+        //this.strategy.goByFront(244);
+        this.strategy.turn(62);
+        //this.strategy.turn(-62);
+        this.strategy.goUntilLocatedWall();
+        this.strategy.goUntilTargetDistance();
+        this.strategy.center();
     }
 
     @Override

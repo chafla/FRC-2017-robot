@@ -48,7 +48,7 @@ public class MattStrategy extends Strategy {
 
         if (leftLidar == null || rightLidar == null) {
             System.out.println("Lidar data is null.");
-            // We've got no valid info, let's just go for whatever we can get
+            // We've got no valid info, let's just goByRear for whatever we can get
             robot.drive(0, 0, 0.35, SensorType.LIDAR_GEAR, "Searching for valid surface");
             return;
 

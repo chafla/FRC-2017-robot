@@ -204,4 +204,22 @@ public abstract class Strategy {
     public void onXboxRS() {
     }
 
+    public void goByRear(int dist) {
+    }
+
+    public void goByFront(int dist) {
+    }
+
+    public void turn(double degrees) {
+    }
+
+    public void goUntilLocatedWall() {
+    }
+
+    public void goUntilTargetDistance() {
+    }
+
+    public void center() {
+    }
+
 }
