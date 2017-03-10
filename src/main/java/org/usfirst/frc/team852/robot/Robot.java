@@ -177,6 +177,13 @@ public class Robot extends SampleRobot {
         });
     }
 
+    public void enableAllSensors(final boolean enabled) {
+        this.enableShortLidar(enabled);
+        this.enableLongLidar(enabled);
+        this.enableHeading(enabled);
+        this.enableCamera(enabled);
+    }
+
     public void enableShortLidar(final boolean enabled) {
         this.publish(LEFT_LIDAR_COMMAND, enabled);
         this.publish(RIGHT_LIDAR_COMMAND, enabled);
