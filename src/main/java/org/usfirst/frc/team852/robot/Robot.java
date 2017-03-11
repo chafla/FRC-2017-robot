@@ -249,15 +249,22 @@ public class Robot extends SampleRobot {
     @Override
     public void autonomous() {
         ring.set(Relay.Value.kReverse);
+        //this.robotDrive.mecanumDrive_Cartesian(0,-0.3,0,0);
 
         // distance is in cm
-        this.strategy.goByRear(244);
+        //this.strategy.goByRear(200);
+        //System.out.println("turning");
         //this.strategy.goByFront(244);
-        this.strategy.turn(62);
+        this.strategy.turn(60);
+        //System.out.println("turned");
         //this.strategy.turn(-62);
-        this.strategy.goUntilLocatedWall();
-        this.strategy.goUntilTargetDistance();
-        this.strategy.center();
+        //this.strategy.goUntilLocatedWall();
+        //System.out.println("found wall");
+        //this.strategy.goUntilTargetDistance();
+        //System.out.println("centering");
+        //this.strategy.center();
+
+        Timer.delay(0.005);
     }
 
     @Override
@@ -361,8 +368,11 @@ public class Robot extends SampleRobot {
                 this.rackAndPinion.set(0);
             } else if (this.xbox.getRawButton(XBOX_Back))
                 this.strategy.onXboxBack();
-            else if (this.xbox.getRawButton(XBOX_Start))
-                this.strategy.onXboxStart();
+            else if (this.xbox.getRawButton(XBOX_Start)) {
+                while (this.xbox.getRawButton(XBOX_Start))
+                    this.strategy.onXboxRS();
+                this.strategy.onXboxLS();
+            }
             else if (this.xbox.getRawButton(XBOX_LS))
                 this.strategy.onXboxLS();
             else if (this.xbox.getRawButton(XBOX_RS))
@@ -378,8 +388,8 @@ public class Robot extends SampleRobot {
                 this.rumble(0);
             }
 
-            if (stick1.getRawButton(9))
-                centerRandP();
+            /*if (stick1.getRawButton(9))
+                centerRandP();*/
 
             // NOTE! Left/right movement may be reversed, may need to modify signs!
 
@@ -396,15 +406,20 @@ public class Robot extends SampleRobot {
 
             // Velocity drive needs a larger deadzone, and we can't extend Joystick.
             if (!this.xbox.getRawButton(XBOX_A) && !this.xbox.getRawButton(XBOX_X) && !this.xbox.getRawButton(XBOX_Back) && !this.xbox.getRawButton((XBOX_Start))) {
-                if (this.stick1.getZ() < 0)
+                if (this.stick1.getZ() < -0.5)
                     this.robotDrive.mecanumDrive_Cartesian(this.adjustDeadzone(this.stick1.getX()),
                                                            -this.adjustDeadzone(this.stick1.getY()),
-                                                           this.adjustDeadzone(this.stick2.getX()),
+                            -this.adjustDeadzone(this.stick2.getX()),
                                                            0);
-                else
+                else if (this.stick1.getZ() > 0.5)
                     this.robotDrive.mecanumDrive_Cartesian((this.adjustDeadzone(this.stick1.getX()) + this.adjustDeadzone(this.stick2.getX())) / 2,
                                                            (this.adjustDeadzone(this.stick1.getY()) + this.adjustDeadzone(this.stick2.getY())) / 2,
                                                            (this.adjustDeadzone(this.stick2.getY()) - this.adjustDeadzone(this.stick1.getY())) / 2, 0);
+                else
+                    this.robotDrive.mecanumDrive_Cartesian((this.adjustDeadzone(this.stick1.getX()) + this.adjustDeadzone(this.stick2.getX())) / 2,
+                            (this.adjustDeadzone(this.stick1.getY()) + this.adjustDeadzone(this.stick2.getY())) / 2,
+                            (this.adjustDeadzone(this.stick1.getY()) - this.adjustDeadzone(this.stick2.getY())) / 2, 0);
+
             }
             Timer.delay(0.005); // wait 5ms to avoid hogging CPU cycles
         }
@@ -557,7 +572,9 @@ public class Robot extends SampleRobot {
             client.subscribe(Constants.HEADING_TOPIC,
                              (topic, msg) -> {
                                  final double degree = Double.parseDouble(new String(msg.getPayload()));
+                                 System.out.println(this.strategy.getHeadingRef() + " - " + new HeadingData(degree));
                                  this.strategy.getHeadingRef().set(new HeadingData(degree));
+                                 System.out.println(this.strategy.getHeadingRef() + " - " + new HeadingData(degree));
                                  synchronized (this.strategy.getHeadingRef()) {
                                      this.strategy.getHeadingRef().notifyAll();
                                  }
