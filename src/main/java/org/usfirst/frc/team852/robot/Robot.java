@@ -43,6 +43,7 @@ public class Robot extends SampleRobot {
     private static final int XBOX_LS = 9;
     private static final int XBOX_RS = 10;
     private static boolean climberToggle = false;
+    private static boolean finishedAutonomous = false;
 
     private static final double s_deadZone = 0.05;
     final IMqttMessageListener messageListener = (topic, msg) -> {
@@ -248,23 +249,24 @@ public class Robot extends SampleRobot {
      */
     @Override
     public void autonomous() {
+        this.strategy.iterationInit();
         ring.set(Relay.Value.kReverse);
         //this.robotDrive.mecanumDrive_Cartesian(0,-0.3,0,0);
-
-        // distance is in cm
-        //this.strategy.goByRear(200);
-        //System.out.println("turning");
-        //this.strategy.goByFront(244);
-        this.strategy.turn(60);
-        //System.out.println("turned");
-        //this.strategy.turn(-62);
-        //this.strategy.goUntilLocatedWall();
-        //System.out.println("found wall");
-        //this.strategy.goUntilTargetDistance();
-        //System.out.println("centering");
-        //this.strategy.center();
-
-        Timer.delay(0.005);
+        if (!finishedAutonomous) {
+            // distance is in cm
+            this.strategy.goByRear(400);
+            //System.out.println("turning");
+            //this.strategy.goByFront(244);
+            this.strategy.turn(60);
+            //System.out.println("turned");
+            //this.strategy.turn(-62);
+            //this.strategy.goUntilLocatedWall();
+            //System.out.println("found wall");
+            //this.strategy.goUntilTargetDistance();
+            //System.out.println("centering");
+            //this.strategy.center();
+        }
+        finishedAutonomous = true;
     }
 
     @Override
@@ -572,9 +574,7 @@ public class Robot extends SampleRobot {
             client.subscribe(Constants.HEADING_TOPIC,
                              (topic, msg) -> {
                                  final double degree = Double.parseDouble(new String(msg.getPayload()));
-                                 System.out.println(this.strategy.getHeadingRef() + " - " + new HeadingData(degree));
                                  this.strategy.getHeadingRef().set(new HeadingData(degree));
-                                 System.out.println(this.strategy.getHeadingRef() + " - " + new HeadingData(degree));
                                  synchronized (this.strategy.getHeadingRef()) {
                                      this.strategy.getHeadingRef().notifyAll();
                                  }

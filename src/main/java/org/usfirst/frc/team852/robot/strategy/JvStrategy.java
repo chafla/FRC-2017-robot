@@ -542,14 +542,12 @@ public class JvStrategy extends Strategy {
     // autonomous methods
     @Override
     public void goByRear(int dist) {
+        iterationInit();
         final Robot robot = this.getRobot();
-        final HeadingData headingData = this.getCurrentHeading();
-        final LidarData rearLidarData = this.getCurrentRearLidar();
 
-        if (headingData == null) {
-            robot.logMsg(HEADING, "Null heading data");
-            return;
-        }
+        LidarData rearLidarData = this.getCurrentRearLidar();
+
+
         if (rearLidarData == null) {
             robot.logMsg(HEADING, "Null heading data");
             return;
@@ -558,6 +556,14 @@ public class JvStrategy extends Strategy {
         final double startVal = rearLidarData.getValOnce();
 
         while (robot.isEnabled() && robot.isAutonomous()) {
+            iterationInit();
+
+            final HeadingData headingData = this.getCurrentHeading();
+            rearLidarData = this.getCurrentRearLidar();
+            if (headingData == null) {
+                robot.logMsg(HEADING, "Null heading data");
+                return;
+            }
 
             final double bVal = rearLidarData.getValOnce();
             System.out.println(bVal);
@@ -595,6 +601,7 @@ public class JvStrategy extends Strategy {
 
     @Override
     public void goByFront(int dist) {
+        iterationInit();
         final Robot robot = this.getRobot();
         final HeadingData headingData = this.getCurrentHeading();
         final LidarData frontLidarData = this.getCurrentFrontLidar();
@@ -610,7 +617,7 @@ public class JvStrategy extends Strategy {
 
         final double startVal = frontLidarData.getValOnce();
         while (robot.isEnabled() && robot.isAutonomous()) {
-
+            iterationInit();
             final double fVal = frontLidarData.getValOnce();
             final double degrees = headingData.getDegreesOnce();
             // This will be set the first time through
@@ -646,48 +653,52 @@ public class JvStrategy extends Strategy {
 
     @Override
     public void turn(double degreeTurn) {
+        iterationInit();
         final Robot robot = this.getRobot();
-        final HeadingData headingData = this.getCurrentHeading();
-        if (headingData == null) {
-            robot.logMsg(HEADING, "Null heading data");
-            System.out.println("null");
-            return;
-        }
 
         this.setHeadingError(null);
         while (robot.isEnabled() && robot.isAutonomous()) {
+            iterationInit();
+            final HeadingData headingData = this.getCurrentHeading();
+            if (headingData == null) {
+                robot.logMsg(HEADING, "Null heading data");
+                System.out.println("null");
+                return;
+            }
             final double degrees = headingData.getDegreesOnce();
 
             // This will be set the first time through
-            if (this.getHeadingError() == null)
+            if (this.getHeadingError() == null) {
                 this.setHeadingError(new HeadingError(degrees));
+                System.out.println("called once");
+            }
 
 
             final double errorDegrees = this.getHeadingError().getError(degrees);
 
+            System.out.println(String.format("current error: %s %s %f",
+                    errorDegrees, this.getHeadingError().getInitialHeading(), degrees));
             final double turnSpeed;
             final String command;
-            System.out.println("current error: " + this.getHeadingError().getError(degrees));
-            System.out.println(errorDegrees);
             if (degreeTurn > 0) {
                 if (errorDegrees < degreeTurn) {
                     turnSpeed = 0.2;
-                    command = "Clockwise";
+                    command = "Clockwise " + errorDegrees;
                     robot.drive(0, 0, turnSpeed, HEADING, command);
                 } else {
                     turnSpeed = 0;
-                    command = "Aligned";
+                    command = "Aligned " + errorDegrees;
                     robot.drive(0, 0, turnSpeed, HEADING, command);
                     return;
                 }
             } else {
                 if (Math.abs(errorDegrees) < Math.abs(degreeTurn)) {
                     turnSpeed = -0.2;
-                    command = "Counter-clockwise";
+                    command = "Counter-clockwise " + errorDegrees;
                     robot.drive(0, 0, turnSpeed, HEADING, command);
                 } else {
                     turnSpeed = 0;
-                    command = "Aligned";
+                    command = "Aligned " + errorDegrees;
                     robot.drive(0, 0, turnSpeed, HEADING, command);
                     return;
                 }
@@ -698,6 +709,7 @@ public class JvStrategy extends Strategy {
 
     @Override
     public void goUntilLocatedWall() {
+        iterationInit();
         final Robot robot = this.getRobot();
         final HeadingData headingData = this.getCurrentHeading();
         final LidarData leftLidarData = this.getCurrentLeftLidar();
@@ -719,6 +731,7 @@ public class JvStrategy extends Strategy {
         }
 
         while (robot.isEnabled() && robot.isAutonomous()) {
+            iterationInit();
 
             final int lVal = leftLidarData.getValOnce();
             final int rVal = rightLidarData.getValOnce();
@@ -755,6 +768,7 @@ public class JvStrategy extends Strategy {
 
     @Override
     public void goUntilTargetDistance() {
+        iterationInit();
         final Robot robot = this.getRobot();
         final HeadingData headingData = this.getCurrentHeading();
         final LidarData leftLidarData = this.getCurrentLeftLidar();
@@ -776,6 +790,7 @@ public class JvStrategy extends Strategy {
         }
 
         while (robot.isEnabled() && robot.isAutonomous()) {
+            iterationInit();
 
             final int lVal = leftLidarData.getValOnce();
             final int rVal = rightLidarData.getValOnce();
@@ -813,6 +828,7 @@ public class JvStrategy extends Strategy {
 
     @Override
     public void center() {
+        iterationInit();
         final Robot robot = this.getRobot();
         final CameraData cameraData = this.getCurrentCameraGear();
 
@@ -822,6 +838,7 @@ public class JvStrategy extends Strategy {
         }
 
         while (robot.isEnabled() && robot.isAutonomous()) {
+            iterationInit();
 
             final int xVal = cameraData.getValOnce();
             final int wVal = cameraData.getWidth();
