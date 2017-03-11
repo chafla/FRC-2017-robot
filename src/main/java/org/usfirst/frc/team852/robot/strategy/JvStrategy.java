@@ -653,13 +653,14 @@ public class JvStrategy extends Strategy {
             System.out.println("null");
             return;
         }
+
         this.setHeadingError(null);
         while (robot.isEnabled() && robot.isAutonomous()) {
-
             final double degrees = headingData.getDegreesOnce();
+
             // This will be set the first time through
             if (this.getHeadingError() == null)
-                this.setHeadingError(new HeadingError(degrees + degreeTurn));
+                this.setHeadingError(new HeadingError(degrees));
 
 
             final double errorDegrees = this.getHeadingError().getError(degrees);
@@ -668,25 +669,29 @@ public class JvStrategy extends Strategy {
             final String command;
             System.out.println("current error: " + this.getHeadingError().getError(degrees));
             System.out.println(errorDegrees);
-            if (errorDegrees > THRESHHOLD_DEGREES || errorDegrees < -THRESHHOLD_DEGREES) {
-                if (errorDegrees > THRESHHOLD_DEGREES) {
-                    // veered right, turn left, turnSpeed will be no less than -1
-                    turnSpeed = Math.max(-errorDegrees * PID_CORRECTION_STRAIGHT, -0.2);
-                    command = "Counter-clockwise";
-
-                } else if (errorDegrees < (THRESHHOLD_DEGREES * -1)) {
-                    // veered left, turn right, turnSpeed will be no more 1
-                    turnSpeed = Math.min(-errorDegrees * PID_CORRECTION_STRAIGHT, 0.2);
+            if (degreeTurn > 0) {
+                if (errorDegrees < degreeTurn) {
+                    turnSpeed = 0.2;
                     command = "Clockwise";
+                    robot.drive(0, 0, turnSpeed, HEADING, command);
                 } else {
-                    // On course, drive straight.
                     turnSpeed = 0;
                     command = "Aligned";
+                    robot.drive(0, 0, turnSpeed, HEADING, command);
+                    return;
                 }
-
-                robot.drive(0, 0, turnSpeed, HEADING, command);
-            } else
-                return;
+            } else {
+                if (Math.abs(errorDegrees) < Math.abs(degreeTurn)) {
+                    turnSpeed = -0.2;
+                    command = "Counter-clockwise";
+                    robot.drive(0, 0, turnSpeed, HEADING, command);
+                } else {
+                    turnSpeed = 0;
+                    command = "Aligned";
+                    robot.drive(0, 0, turnSpeed, HEADING, command);
+                    return;
+                }
+            }
             edu.wpi.first.wpilibj.Timer.delay(0.005);
         }
     }
