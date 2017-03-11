@@ -251,20 +251,17 @@ public class Robot extends SampleRobot {
     public void autonomous() {
         this.strategy.iterationInit();
         ring.set(Relay.Value.kReverse);
-        //this.robotDrive.mecanumDrive_Cartesian(0,-0.3,0,0);
         if (!finishedAutonomous) {
             // distance is in cm
-            this.strategy.goByRear(400);
-            //System.out.println("turning");
-            //this.strategy.goByFront(244);
-            this.strategy.turn(60);
-            //System.out.println("turned");
-            //this.strategy.turn(-62);
-            //this.strategy.goUntilLocatedWall();
-            //System.out.println("found wall");
-            //this.strategy.goUntilTargetDistance();
-            //System.out.println("centering");
-            //this.strategy.center();
+            this.strategy.goByRear(160);
+            System.out.println("turning");
+            this.strategy.turn(55);
+            System.out.println("turned");
+            this.strategy.goUntilLocatedWall();
+            System.out.println("found wall");
+            this.strategy.goUntilTargetDistance();
+            System.out.println("centering");
+            this.strategy.center();
         }
         finishedAutonomous = true;
     }

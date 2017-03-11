@@ -17,9 +17,6 @@ public class JvStrategy extends Strategy {
     private double x = 0;
     private double y = 0;
     private double rot = 0;
-    private static final double frontTarget = 14122;
-    private static final double rearTarget = 2438;
-    private static final double turn = 62;
     private static final int upperLidarThreshold = 610;
     private static final int lowerLidarThreshold = 570;
     private static double xSpeed = 0.15;
@@ -547,7 +544,6 @@ public class JvStrategy extends Strategy {
 
         LidarData rearLidarData = this.getCurrentRearLidar();
 
-
         if (rearLidarData == null) {
             robot.logMsg(HEADING, "Null heading data");
             return;
@@ -592,13 +588,14 @@ public class JvStrategy extends Strategy {
                     command = "Forward";
                 }
                 robot.logMsg(HEADING, "error: " + errorDegrees + " turn speed: " + turnSpeed);
-                robot.drive(0, -0.3, turnSpeed, HEADING, command);
+                robot.drive(0, -0.5, turnSpeed, HEADING, command);
             } else
                 return;
             edu.wpi.first.wpilibj.Timer.delay(0.005);
         }
     }
 
+    // don't use this
     @Override
     public void goByFront(int dist) {
         iterationInit();
@@ -709,30 +706,28 @@ public class JvStrategy extends Strategy {
 
     @Override
     public void goUntilLocatedWall() {
-        iterationInit();
         final Robot robot = this.getRobot();
-        final HeadingData headingData = this.getCurrentHeading();
-        final LidarData leftLidarData = this.getCurrentLeftLidar();
-        final LidarData rightLidarData = this.getCurrentRightLidar();
-
-        if (headingData == null) {
-            robot.logMsg(HEADING, "Null heading data");
-            return;
-        }
-        if (leftLidarData == null) {
-            robot.logMsg(LIDAR_GEAR, "Null left lidar data");
-            robot.stopRandP();
-            return;
-        }
-        if (rightLidarData == null) {
-            robot.logMsg(LIDAR_GEAR, "Null right lidar data");
-            robot.stopRandP();
-            return;
-        }
 
         while (robot.isEnabled() && robot.isAutonomous()) {
             iterationInit();
+            final HeadingData headingData = this.getCurrentHeading();
+            final LidarData leftLidarData = this.getCurrentLeftLidar();
+            final LidarData rightLidarData = this.getCurrentRightLidar();
 
+            if (headingData == null) {
+                robot.logMsg(HEADING, "Null heading data");
+                return;
+            }
+            if (leftLidarData == null) {
+                robot.logMsg(LIDAR_GEAR, "Null left lidar data");
+                robot.stopRandP();
+                return;
+            }
+            if (rightLidarData == null) {
+                robot.logMsg(LIDAR_GEAR, "Null right lidar data");
+                robot.stopRandP();
+                return;
+            }
             final int lVal = leftLidarData.getValOnce();
             final int rVal = rightLidarData.getValOnce();
             final double degrees = headingData.getDegreesOnce();
@@ -768,30 +763,28 @@ public class JvStrategy extends Strategy {
 
     @Override
     public void goUntilTargetDistance() {
-        iterationInit();
         final Robot robot = this.getRobot();
-        final HeadingData headingData = this.getCurrentHeading();
-        final LidarData leftLidarData = this.getCurrentLeftLidar();
-        final LidarData rightLidarData = this.getCurrentRightLidar();
-
-        if (headingData == null) {
-            robot.logMsg(HEADING, "Null heading data");
-            return;
-        }
-        if (leftLidarData == null) {
-            robot.logMsg(LIDAR_GEAR, "Null left lidar data");
-            robot.stopRandP();
-            return;
-        }
-        if (rightLidarData == null) {
-            robot.logMsg(LIDAR_GEAR, "Null right lidar data");
-            robot.stopRandP();
-            return;
-        }
 
         while (robot.isEnabled() && robot.isAutonomous()) {
             iterationInit();
+            final HeadingData headingData = this.getCurrentHeading();
+            final LidarData leftLidarData = this.getCurrentLeftLidar();
+            final LidarData rightLidarData = this.getCurrentRightLidar();
 
+            if (headingData == null) {
+                robot.logMsg(HEADING, "Null heading data");
+                return;
+            }
+            if (leftLidarData == null) {
+                robot.logMsg(LIDAR_GEAR, "Null left lidar data");
+                robot.stopRandP();
+                return;
+            }
+            if (rightLidarData == null) {
+                robot.logMsg(LIDAR_GEAR, "Null right lidar data");
+                robot.stopRandP();
+                return;
+            }
             final int lVal = leftLidarData.getValOnce();
             final int rVal = rightLidarData.getValOnce();
             final double degrees = headingData.getDegreesOnce();
@@ -828,18 +821,16 @@ public class JvStrategy extends Strategy {
 
     @Override
     public void center() {
-        iterationInit();
         final Robot robot = this.getRobot();
-        final CameraData cameraData = this.getCurrentCameraGear();
-
-        if (cameraData == null) {
-            robot.logMsg(HEADING, "Null heading data");
-            return;
-        }
 
         while (robot.isEnabled() && robot.isAutonomous()) {
             iterationInit();
+            final CameraData cameraData = this.getCurrentCameraGear();
 
+            if (cameraData == null) {
+                robot.logMsg(HEADING, "Null heading data");
+                return;
+            }
             final int xVal = cameraData.getValOnce();
             final int wVal = cameraData.getWidth();
 
