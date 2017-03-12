@@ -78,8 +78,7 @@ public class JvStrategy extends Strategy {
         } else if (xVal > (wVal / 2 + wVal * 0.075)) {
             x = -xSpeed;
             robot.stopRandP();
-        }
-        else {
+        } else {
             if (x != 0)
                 x = 0;
         }
@@ -886,5 +885,90 @@ public class JvStrategy extends Strategy {
         }
     }
 
+    @Override
+    public void backupByMillis(long time) {
+        iterationInit();
+        final Robot robot = this.getRobot();
+        final HeadingData headingData = this.getCurrentHeading();
+        if (headingData == null) {
+            robot.logMsg(HEADING, "Null heading data");
+            return;
+        }
+        final long startTime = System.currentTimeMillis();
+        long currentTime = System.currentTimeMillis();
+        while (robot.isEnabled() && robot.isAutonomous() && (currentTime - startTime) < time) {
+            iterationInit();
+            final double degrees = headingData.getDegreesOnce();
+            // This will be set the first time through
+            if (this.getHeadingError() == null)
+                this.setHeadingError(new HeadingError(degrees));
+
+            final double errorDegrees = this.getHeadingError().getError(degrees);
+
+            final double turnSpeed;
+            final String command;
+
+            if (errorDegrees > THRESHHOLD_DEGREES) {
+                // veered right, turn left, turnSpeed will be no less than -1
+                turnSpeed = Math.max(-errorDegrees * PID_CORRECTION_STRAIGHT, -0.2);
+                command = "Forward and counter-clockwise";
+
+            } else if (errorDegrees < (THRESHHOLD_DEGREES * -1)) {
+                // veered left, turn right, turnSpeed will be no more 1
+                turnSpeed = Math.min(-errorDegrees * PID_CORRECTION_STRAIGHT, 0.2);
+                command = "Forward and clockwise";
+            } else {
+                // On course, drive straight.
+                turnSpeed = 0;
+                command = "Forward";
+            }
+            robot.logMsg(HEADING, "error: " + errorDegrees + " turn speed: " + turnSpeed);
+            robot.drive(0, 1, turnSpeed, HEADING, command);
+            edu.wpi.first.wpilibj.Timer.delay(0.005);
+            currentTime = System.currentTimeMillis();
+        }
+    }
+
+    @Override
+    public void forwardByMillis(long time) {
+        iterationInit();
+        final Robot robot = this.getRobot();
+        final HeadingData headingData = this.getCurrentHeading();
+        if (headingData == null) {
+            robot.logMsg(HEADING, "Null heading data");
+            return;
+        }
+        final long startTime = System.currentTimeMillis();
+        while (robot.isEnabled() && robot.isAutonomous() && (System.currentTimeMillis() - startTime) < time) {
+            iterationInit();
+            final double degrees = headingData.getDegreesOnce();
+            // This will be set the first time through
+            if (this.getHeadingError() == null)
+                this.setHeadingError(new HeadingError(degrees));
+
+            final double errorDegrees = this.getHeadingError().getError(degrees);
+
+            final double turnSpeed;
+            final String command;
+
+            if (errorDegrees > THRESHHOLD_DEGREES) {
+                // veered right, turn left, turnSpeed will be no less than -1
+                turnSpeed = Math.max(-errorDegrees * PID_CORRECTION_STRAIGHT, -0.2);
+                command = "Forward and counter-clockwise";
+
+            } else if (errorDegrees < (THRESHHOLD_DEGREES * -1)) {
+                // veered left, turn right, turnSpeed will be no more 1
+                turnSpeed = Math.min(-errorDegrees * PID_CORRECTION_STRAIGHT, 0.2);
+                command = "Forward and clockwise";
+            } else {
+                // On course, drive straight.
+                turnSpeed = 0;
+                command = "Forward";
+            }
+            robot.logMsg(HEADING, "error: " + errorDegrees + " turn speed: " + turnSpeed);
+            robot.drive(0, -1, turnSpeed, HEADING, command);
+            edu.wpi.first.wpilibj.Timer.delay(0.005);
+        }
+    }
 
 }

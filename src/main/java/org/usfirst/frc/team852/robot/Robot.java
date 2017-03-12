@@ -251,38 +251,51 @@ public class Robot extends SampleRobot {
     public void autonomous() {
         this.strategy.iterationInit();
         ring.set(Relay.Value.kReverse);
+        System.out.println(this.stick2.getZ());
         if (!finishedAutonomous) {
-            // left
-//            this.strategy.goByRear(200);
-//            System.out.println("turning");
-//            this.strategy.turn(55);
-//            System.out.println("turned");
-//            this.strategy.goUntilLocatedWall();
-//            System.out.println("found wall");
-//            this.strategy.goUntilTargetDistance();
-//            System.out.println("centering");
-//            this.strategy.center();
-
-            // center
-            this.strategy.goByRear(150);
-            System.out.println("Traveled 150 cm");
-            this.strategy.goUntilLocatedWall();
-            System.out.println("Found wall");
-            this.strategy.goUntilTargetDistance();
-            System.out.println("Centering");
-            this.strategy.center();
-            System.out.println("Pushed gear");
-
-            //right
-//            this.strategy.goByRear(200);
-//            System.out.println("turning");
-//            this.strategy.turn(-55);
-//            System.out.println("turned");
-//            this.strategy.goUntilLocatedWall();
-//            System.out.println("found wall");
-//            this.strategy.goUntilTargetDistance();
-//            System.out.println("centering");
-//            this.strategy.center();
+            if (this.stick2.getZ() < -0.5) { // start on left
+                this.strategy.goByRear(200);
+                System.out.println("Turning");
+                this.strategy.turn(55);
+                System.out.println("Turned");
+                this.strategy.goUntilLocatedWall();
+                System.out.println("Found wall");
+                this.strategy.goUntilTargetDistance();
+                System.out.println("Centering");
+                this.strategy.center();
+                System.out.println("Pushed gear");
+                this.strategy.backupByMillis(1500);
+                System.out.println("Backed up");
+                this.strategy.turn(-55);
+                System.out.println("Turned back");
+                this.strategy.forwardByMillis(5000);
+            } else if (this.stick2.getZ() > 0.5) { // start on right
+                this.strategy.goByRear(200);
+                System.out.println("Turning");
+                this.strategy.turn(-55);
+                System.out.println("Turned");
+                this.strategy.goUntilLocatedWall();
+                System.out.println("Found wall");
+                this.strategy.goUntilTargetDistance();
+                System.out.println("Centering");
+                this.strategy.center();
+                System.out.println("Pushed gear");
+                this.strategy.backupByMillis(1500);
+                System.out.println("Backed up");
+                this.strategy.turn(55);
+                System.out.println("Turned back");
+                this.strategy.forwardByMillis(5000);
+            } else { // start in center
+                this.strategy.goByRear(150);
+                System.out.println("Traveled 150 cm");
+                this.strategy.goUntilLocatedWall();
+                System.out.println("Found wall");
+                this.strategy.goUntilTargetDistance();
+                System.out.println("Centering");
+                this.strategy.center();
+                System.out.println("Pushed gear");
+                this.strategy.backupByMillis(1000);
+            }
         }
         finishedAutonomous = true;
     }

@@ -222,4 +222,10 @@ public abstract class Strategy {
     public void center() {
     }
 
+    public void backupByMillis(long time) {
+    }
+
+    public void forwardByMillis(long time) {
+    }
+
 }
