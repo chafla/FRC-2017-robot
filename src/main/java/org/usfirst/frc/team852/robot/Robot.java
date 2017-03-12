@@ -268,7 +268,7 @@ public class Robot extends SampleRobot {
                 System.out.println("Backed up");
                 this.strategy.turn(-55);
                 System.out.println("Turned back");
-                this.strategy.forwardByMillis(5000);
+                this.strategy.forwardByMillis(3000);
             } else if (this.stick2.getZ() > 0.5) { // start on right
                 this.strategy.goByRear(200);
                 System.out.println("Turning");
@@ -284,7 +284,7 @@ public class Robot extends SampleRobot {
                 System.out.println("Backed up");
                 this.strategy.turn(55);
                 System.out.println("Turned back");
-                this.strategy.forwardByMillis(5000);
+                this.strategy.forwardByMillis(3000);
             } else { // start in center
                 this.strategy.goByRear(150);
                 System.out.println("Traveled 150 cm");

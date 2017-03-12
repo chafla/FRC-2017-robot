@@ -561,7 +561,6 @@ public class JvStrategy extends Strategy {
             }
 
             final double bVal = rearLidarData.getValOnce();
-            System.out.println(bVal);
             final double degrees = headingData.getDegreesOnce();
             // This will be set the first time through
             if (this.getHeadingError() == null)
@@ -923,7 +922,7 @@ public class JvStrategy extends Strategy {
                 command = "Forward";
             }
             robot.logMsg(HEADING, "error: " + errorDegrees + " turn speed: " + turnSpeed);
-            robot.drive(0, 1, turnSpeed, HEADING, command);
+            robot.drive(0, 0.5, turnSpeed, HEADING, command);
             edu.wpi.first.wpilibj.Timer.delay(0.005);
             currentTime = System.currentTimeMillis();
         }
@@ -966,7 +965,7 @@ public class JvStrategy extends Strategy {
                 command = "Forward";
             }
             robot.logMsg(HEADING, "error: " + errorDegrees + " turn speed: " + turnSpeed);
-            robot.drive(0, -1, turnSpeed, HEADING, command);
+            robot.drive(0, -0.75, turnSpeed, HEADING, command);
             edu.wpi.first.wpilibj.Timer.delay(0.005);
         }
     }
