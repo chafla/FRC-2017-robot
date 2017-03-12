@@ -252,16 +252,37 @@ public class Robot extends SampleRobot {
         this.strategy.iterationInit();
         ring.set(Relay.Value.kReverse);
         if (!finishedAutonomous) {
-            // distance is in cm
-            this.strategy.goByRear(160);
-            System.out.println("turning");
-            this.strategy.turn(55);
-            System.out.println("turned");
+            // left
+//            this.strategy.goByRear(200);
+//            System.out.println("turning");
+//            this.strategy.turn(55);
+//            System.out.println("turned");
+//            this.strategy.goUntilLocatedWall();
+//            System.out.println("found wall");
+//            this.strategy.goUntilTargetDistance();
+//            System.out.println("centering");
+//            this.strategy.center();
+
+            // center
+            this.strategy.goByRear(150);
+            System.out.println("Traveled 150 cm");
             this.strategy.goUntilLocatedWall();
-            System.out.println("found wall");
+            System.out.println("Found wall");
             this.strategy.goUntilTargetDistance();
-            System.out.println("centering");
+            System.out.println("Centering");
             this.strategy.center();
+            System.out.println("Pushed gear");
+
+            //right
+//            this.strategy.goByRear(200);
+//            System.out.println("turning");
+//            this.strategy.turn(-55);
+//            System.out.println("turned");
+//            this.strategy.goUntilLocatedWall();
+//            System.out.println("found wall");
+//            this.strategy.goUntilTargetDistance();
+//            System.out.println("centering");
+//            this.strategy.center();
         }
         finishedAutonomous = true;
     }

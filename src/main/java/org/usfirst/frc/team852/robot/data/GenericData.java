@@ -16,7 +16,7 @@ public abstract class GenericData {
     }
 
     protected void setInvalid() {
-        System.out.println(this.dataType.getUpdateMsg());
+        //System.out.println(this.dataType.getUpdateMsg());
         this.invalid.set(true);
     }
 

@@ -667,14 +667,13 @@ public class JvStrategy extends Strategy {
             // This will be set the first time through
             if (this.getHeadingError() == null) {
                 this.setHeadingError(new HeadingError(degrees));
-                System.out.println("called once");
             }
 
 
             final double errorDegrees = this.getHeadingError().getError(degrees);
 
-            System.out.println(String.format("current error: %s %s %f",
-                    errorDegrees, this.getHeadingError().getInitialHeading(), degrees));
+//            System.out.println(String.format("current error: %s %s %f",
+//                    errorDegrees, this.getHeadingError().getInitialHeading(), degrees));
             final double turnSpeed;
             final String command;
             if (degreeTurn > 0) {
@@ -706,8 +705,9 @@ public class JvStrategy extends Strategy {
 
     @Override
     public void goUntilLocatedWall() {
+        iterationInit();
         final Robot robot = this.getRobot();
-
+        this.setHeadingError(null);
         while (robot.isEnabled() && robot.isAutonomous()) {
             iterationInit();
             final HeadingData headingData = this.getCurrentHeading();
@@ -756,15 +756,19 @@ public class JvStrategy extends Strategy {
                 }
                 robot.logMsg(HEADING, "error: " + errorDegrees + " turn speed: " + turnSpeed);
                 robot.drive(0, -0.5, turnSpeed, HEADING, command);
-            } else
+            } else {
+                command = "stop";
+                robot.drive(0, 0, 0, HEADING, command);
                 return;
+            }
         }
     }
 
     @Override
     public void goUntilTargetDistance() {
+        iterationInit();
         final Robot robot = this.getRobot();
-
+        this.setHeadingError(null);
         while (robot.isEnabled() && robot.isAutonomous()) {
             iterationInit();
             final HeadingData headingData = this.getCurrentHeading();
@@ -796,7 +800,7 @@ public class JvStrategy extends Strategy {
 
             final double turnSpeed;
             final String command;
-            if (lVal > 510 && rVal > 510) {
+            if (lVal > upperLidarThreshold && rVal > upperLidarThreshold) {
 
                 if (errorDegrees > THRESHHOLD_DEGREES) {
                     // veered right, turn left, turnSpeed will be no less than -1
@@ -814,8 +818,11 @@ public class JvStrategy extends Strategy {
                 }
                 robot.logMsg(HEADING, "error: " + errorDegrees + " turn speed: " + turnSpeed);
                 robot.drive(0, -0.5 * (lVal + rVal) / 2000, turnSpeed, HEADING, command);
-            } else
+            } else {
+                command = "stop";
+                robot.drive(0, 0, 0, HEADING, command);
                 return;
+            }
         }
     }
 
@@ -878,4 +885,6 @@ public class JvStrategy extends Strategy {
             }
         }
     }
+
+
 }
