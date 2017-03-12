@@ -254,7 +254,7 @@ public class Robot extends SampleRobot {
         System.out.println(this.stick2.getZ());
         if (!finishedAutonomous) {
             if (this.stick2.getZ() < -0.5) { // start on left
-                this.strategy.goByRear(200);
+                this.strategy.goByRear(260);
                 System.out.println("Turning");
                 this.strategy.turn(55);
                 System.out.println("Turned");
@@ -270,7 +270,7 @@ public class Robot extends SampleRobot {
                 System.out.println("Turned back");
                 this.strategy.forwardByMillis(3000);
             } else if (this.stick2.getZ() > 0.5) { // start on right
-                this.strategy.goByRear(200);
+                this.strategy.goByRear(260);
                 System.out.println("Turning");
                 this.strategy.turn(-55);
                 System.out.println("Turned");
