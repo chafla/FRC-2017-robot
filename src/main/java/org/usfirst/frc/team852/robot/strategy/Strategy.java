@@ -228,4 +228,6 @@ public abstract class Strategy {
     public void forwardByMillis(long time) {
     }
 
+    public void stop() {
+    }
 }

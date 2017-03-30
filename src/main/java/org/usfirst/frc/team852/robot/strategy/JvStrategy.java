@@ -815,7 +815,7 @@ public class JvStrategy extends Strategy {
                     command = "Forward";
                 }
                 robot.logMsg(HEADING, "error: " + errorDegrees + " turn speed: " + turnSpeed);
-                robot.drive(0, -0.5 * (lVal + rVal) / 2000, turnSpeed, HEADING, command);
+                robot.drive(0, -0.5 * (lVal + rVal) / 2000, turnSpeed, HEADING, String.format("%s, %d, %d", command, lVal, rVal));
             } else {
                 command = "stop";
                 robot.drive(0, 0, 0, HEADING, command);
@@ -844,10 +844,10 @@ public class JvStrategy extends Strategy {
                     robot.logMsg(CAMERA_GEAR, "No camera data");
                     robot.rumble(1);
                 } else if (xVal < (wVal / 2 - wVal * 0.075)) {
-                    x = 0.15;
+                    x = xSpeed;
                     robot.stopRandP();
                 } else if (xVal > (wVal / 2 + wVal * 0.075)) {
-                    x = -0.15;
+                    x = -xSpeed;
                     robot.stopRandP();
                 } else {
                     if (x != 0)
@@ -965,9 +965,16 @@ public class JvStrategy extends Strategy {
                 command = "Forward";
             }
             robot.logMsg(HEADING, "error: " + errorDegrees + " turn speed: " + turnSpeed);
-            robot.drive(0, -0.75, turnSpeed, HEADING, command);
+            robot.drive(0, -0.75, 0, HEADING, command);
             edu.wpi.first.wpilibj.Timer.delay(0.005);
         }
+    }
+
+    @Override
+    public void stop() {
+        iterationInit();
+        final Robot robot = this.getRobot();
+        robot.drive(0, 0, 0, HEADING, "stop");
     }
 
 }

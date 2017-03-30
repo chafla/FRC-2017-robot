@@ -253,48 +253,57 @@ public class Robot extends SampleRobot {
         ring.set(Relay.Value.kReverse);
         System.out.println(this.stick2.getZ());
         if (!finishedAutonomous) {
-            if (this.stick2.getZ() < -0.5) { // start on left 22 in from inner border to center of robot
-                this.strategy.goByRear(261 - 40); // old 235
+            if (this.stick2.getZ() < -0.5) { // start on left 6 in from inner border to edge of robot
+                this.strategy.goByRear(170); // old 235
                 System.out.println("Turning");
                 this.strategy.turn(60); // old 55
                 System.out.println("Turned");
-                this.strategy.goUntilLocatedWall();
-                System.out.println("Found wall");
+                //this.strategy.goUntilLocatedWall();
+                //System.out.println("Found wall");
                 this.strategy.goUntilTargetDistance();
+                System.out.println("At target distance");
+                this.strategy.stop();
                 System.out.println("Centering");
                 this.strategy.center();
                 System.out.println("Pushed gear");
-                this.strategy.backupByMillis(1000); // old 1500
+                this.strategy.backupByMillis(750); // old 1500
                 System.out.println("Backed up");
                 this.strategy.turn(-60); // old -55
                 System.out.println("Turned back");
-                this.strategy.forwardByMillis(3000);
-            } else if (this.stick2.getZ() > 0.5) { // start on right 22 in from inner border to center of robot
-                this.strategy.goByRear(261 - 40); // old 235
+                this.strategy.forwardByMillis(2000); // old 3000
+                this.strategy.stop();
+            } else if (this.stick2.getZ() > 0.5) { // start on right 6 in from inner border to edge of robot
+                this.strategy.goByRear(170); // old 235
                 System.out.println("Turning");
                 this.strategy.turn(-60); // old -55
                 System.out.println("Turned");
-                this.strategy.goUntilLocatedWall();
-                System.out.println("Found wall");
+                //this.strategy.goUntilLocatedWall();
+                //System.out.println("Found wall");
                 this.strategy.goUntilTargetDistance();
+                System.out.println("At target distance");
+                this.strategy.stop();
                 System.out.println("Centering");
                 this.strategy.center();
                 System.out.println("Pushed gear");
-                this.strategy.backupByMillis(1000); // old 1500
+                this.strategy.backupByMillis(750); // old 1500
                 System.out.println("Backed up");
                 this.strategy.turn(60); // old 55
                 System.out.println("Turned back");
-                this.strategy.forwardByMillis(3000);
-            } else { // start in center 19 in from center of robot to left border (on green line)
-                this.strategy.goByRear(170 - 40); // old 150
+                this.strategy.forwardByMillis(2000); // old 3000
+                this.strategy.stop();
+            } else { // start in center 3 in from edge of robot to left border (centered on green line)
+                this.strategy.goByRear(110); // old 150
                 System.out.println("Went forward");
-                this.strategy.goUntilLocatedWall();
-                System.out.println("Found wall");
+                //this.strategy.goUntilLocatedWall();
+                //System.out.println("Found wall");
                 this.strategy.goUntilTargetDistance();
+                System.out.println("At target distance");
+                this.strategy.stop();
                 System.out.println("Centering");
                 this.strategy.center();
                 System.out.println("Pushed gear");
-                this.strategy.backupByMillis(1000);
+                this.strategy.backupByMillis(500);
+                this.strategy.stop();
             }
         }
         finishedAutonomous = true;
