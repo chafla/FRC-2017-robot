@@ -253,10 +253,10 @@ public class Robot extends SampleRobot {
         ring.set(Relay.Value.kReverse);
         System.out.println(this.stick2.getZ());
         if (!finishedAutonomous) {
-            if (this.stick2.getZ() < -0.5) { // start on left
-                this.strategy.goByRear(260);
+            if (this.stick2.getZ() < -0.5) { // start on left 22 in from inner border to center of robot
+                this.strategy.goByRear(261 - 40); // old 235
                 System.out.println("Turning");
-                this.strategy.turn(55);
+                this.strategy.turn(60); // old 55
                 System.out.println("Turned");
                 this.strategy.goUntilLocatedWall();
                 System.out.println("Found wall");
@@ -264,15 +264,15 @@ public class Robot extends SampleRobot {
                 System.out.println("Centering");
                 this.strategy.center();
                 System.out.println("Pushed gear");
-                this.strategy.backupByMillis(1500);
+                this.strategy.backupByMillis(1000); // old 1500
                 System.out.println("Backed up");
-                this.strategy.turn(-55);
+                this.strategy.turn(-60); // old -55
                 System.out.println("Turned back");
                 this.strategy.forwardByMillis(3000);
-            } else if (this.stick2.getZ() > 0.5) { // start on right
-                this.strategy.goByRear(260);
+            } else if (this.stick2.getZ() > 0.5) { // start on right 22 in from inner border to center of robot
+                this.strategy.goByRear(261 - 40); // old 235
                 System.out.println("Turning");
-                this.strategy.turn(-55);
+                this.strategy.turn(-60); // old -55
                 System.out.println("Turned");
                 this.strategy.goUntilLocatedWall();
                 System.out.println("Found wall");
@@ -280,14 +280,14 @@ public class Robot extends SampleRobot {
                 System.out.println("Centering");
                 this.strategy.center();
                 System.out.println("Pushed gear");
-                this.strategy.backupByMillis(1500);
+                this.strategy.backupByMillis(1000); // old 1500
                 System.out.println("Backed up");
-                this.strategy.turn(55);
+                this.strategy.turn(60); // old 55
                 System.out.println("Turned back");
                 this.strategy.forwardByMillis(3000);
-            } else { // start in center
-                this.strategy.goByRear(150);
-                System.out.println("Traveled 150 cm");
+            } else { // start in center 19 in from center of robot to left border (on green line)
+                this.strategy.goByRear(170 - 40); // old 150
+                System.out.println("Went forward");
                 this.strategy.goUntilLocatedWall();
                 System.out.println("Found wall");
                 this.strategy.goUntilTargetDistance();
@@ -446,12 +446,13 @@ public class Robot extends SampleRobot {
                                                            0);
                 else if (this.stick1.getZ() > 0.5)
                     this.robotDrive.mecanumDrive_Cartesian((this.adjustDeadzone(this.stick1.getX()) + this.adjustDeadzone(this.stick2.getX())) / 2,
-                                                           (this.adjustDeadzone(this.stick1.getY()) + this.adjustDeadzone(this.stick2.getY())) / 2,
-                                                           (this.adjustDeadzone(this.stick2.getY()) - this.adjustDeadzone(this.stick1.getY())) / 2, 0);
+                            (this.adjustDeadzone(this.stick1.getY()) + this.adjustDeadzone(this.stick2.getY())) / 2,
+                            (this.adjustDeadzone(this.stick1.getY()) - this.adjustDeadzone(this.stick2.getY())) / 2, 0);
                 else
                     this.robotDrive.mecanumDrive_Cartesian((this.adjustDeadzone(this.stick1.getX()) + this.adjustDeadzone(this.stick2.getX())) / 2,
                             (this.adjustDeadzone(this.stick1.getY()) + this.adjustDeadzone(this.stick2.getY())) / 2,
-                            (this.adjustDeadzone(this.stick1.getY()) - this.adjustDeadzone(this.stick2.getY())) / 2, 0);
+                            (this.adjustDeadzone(this.stick2.getY()) - this.adjustDeadzone(this.stick1.getY())) / 2, 0);
+
 
             }
             Timer.delay(0.005); // wait 5ms to avoid hogging CPU cycles

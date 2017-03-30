@@ -17,8 +17,8 @@ public class JvStrategy extends Strategy {
     private double x = 0;
     private double y = 0;
     private double rot = 0;
-    private static final int upperLidarThreshold = 610;
-    private static final int lowerLidarThreshold = 570;
+    private static final int upperLidarThreshold = 640; // old 610
+    private static final int lowerLidarThreshold = 600; // old 570
     private static double xSpeed = 0.15;
     private static double ySpeed = 0.15;
     private static double rotSpeed = 0.1;
