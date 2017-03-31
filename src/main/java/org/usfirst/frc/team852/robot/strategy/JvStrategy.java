@@ -568,6 +568,8 @@ public class JvStrategy extends Strategy {
 
             final double errorDegrees = this.getHeadingError().getError(degrees);
 
+            System.out.println("rear lidar: " + bVal);
+
             final double turnSpeed;
             final String command;
             if (bVal - startVal < dist) {
@@ -586,7 +588,7 @@ public class JvStrategy extends Strategy {
                     command = "Forward";
                 }
                 robot.logMsg(HEADING, "error: " + errorDegrees + " turn speed: " + turnSpeed);
-                robot.drive(0, -0.5, turnSpeed, HEADING, command);
+                robot.drive(0, -0.4, turnSpeed, HEADING, command);
             } else
                 return;
             edu.wpi.first.wpilibj.Timer.delay(0.005);
