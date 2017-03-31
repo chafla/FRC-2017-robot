@@ -254,12 +254,12 @@ public class Robot extends SampleRobot {
         System.out.println(this.stick2.getZ());
         if (!finishedAutonomous) {
             if (this.stick2.getZ() < -0.5) { // start on left 6 in from inner border to edge of robot
-                this.strategy.goByRear(170); // old 235
+                this.strategy.goByRear(180); // old 235
                 System.out.println("Turning");
                 this.strategy.turn(60); // old 55
                 System.out.println("Turned");
-                //this.strategy.goUntilLocatedWall();
-                //System.out.println("Found wall");
+                this.strategy.goUntilLocatedWall();
+                System.out.println("Found wall");
                 this.strategy.goUntilTargetDistance();
                 System.out.println("At target distance");
                 this.strategy.stop();
@@ -273,12 +273,12 @@ public class Robot extends SampleRobot {
                 this.strategy.forwardByMillis(2000); // old 3000
                 this.strategy.stop();
             } else if (this.stick2.getZ() > 0.5) { // start on right 6 in from inner border to edge of robot
-                this.strategy.goByRear(170); // old 235
+                this.strategy.goByRear(180); // old 235
                 System.out.println("Turning");
                 this.strategy.turn(-60); // old -55
                 System.out.println("Turned");
-                //this.strategy.goUntilLocatedWall();
-                //System.out.println("Found wall");
+                this.strategy.goUntilLocatedWall();
+                System.out.println("Found wall");
                 this.strategy.goUntilTargetDistance();
                 System.out.println("At target distance");
                 this.strategy.stop();
@@ -294,8 +294,8 @@ public class Robot extends SampleRobot {
             } else { // start in center 3 in from edge of robot to left border (centered on green line)
                 this.strategy.goByRear(110); // old 150
                 System.out.println("Went forward");
-                //this.strategy.goUntilLocatedWall();
-                //System.out.println("Found wall");
+                this.strategy.goUntilLocatedWall();
+                System.out.println("Found wall");
                 this.strategy.goUntilTargetDistance();
                 System.out.println("At target distance");
                 this.strategy.stop();
