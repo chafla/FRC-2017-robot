@@ -253,10 +253,10 @@ public class Robot extends SampleRobot {
         ring.set(Relay.Value.kReverse);
         System.out.println(this.stick2.getZ());
         if (!finishedAutonomous) {
-            if (this.stick2.getZ() < -0.5) { // start on left 6 in from inner border to edge of robot
-                this.strategy.goByRear(180); // old 235
+            if (this.stick2.getZ() < -0.5) { // start on left 6 in from inner border to edge of robot, push to top
+                this.strategy.goByRear(190); // old 180
                 System.out.println("Turning");
-                this.strategy.turn(60); // old 55
+                this.strategy.turn(55);
                 System.out.println("Turned");
                 this.strategy.goUntilLocatedWall();
                 System.out.println("Found wall");
@@ -268,14 +268,14 @@ public class Robot extends SampleRobot {
                 System.out.println("Pushed gear");
                 this.strategy.backupByMillis(750); // old 1500
                 System.out.println("Backed up");
-                this.strategy.turn(-60); // old -55
+                this.strategy.turn(-55);
                 System.out.println("Turned back");
                 this.strategy.forwardByMillis(2000); // old 3000
                 this.strategy.stop();
-            } else if (this.stick2.getZ() > 0.5) { // start on right 6 in from inner border to edge of robot
-                this.strategy.goByRear(180); // old 235
+            } else if (this.stick2.getZ() > 0.5 || this.stick2.getZ() == 0.0) { // start on right 6 in from inner border to edge of robot, push to bottom
+                this.strategy.goByRear(190); // old 180
                 System.out.println("Turning");
-                this.strategy.turn(-60); // old -55
+                this.strategy.turn(-55);
                 System.out.println("Turned");
                 this.strategy.goUntilLocatedWall();
                 System.out.println("Found wall");
@@ -287,7 +287,7 @@ public class Robot extends SampleRobot {
                 System.out.println("Pushed gear");
                 this.strategy.backupByMillis(750); // old 1500
                 System.out.println("Backed up");
-                this.strategy.turn(60); // old 55
+                this.strategy.turn(55);
                 System.out.println("Turned back");
                 this.strategy.forwardByMillis(2000); // old 3000
                 this.strategy.stop();
@@ -497,14 +497,14 @@ public class Robot extends SampleRobot {
         if (!this.rightLimitSwitch.get())  // consider switching to while
             this.rackAndPinion.set(0); // may need to reverse
         else if (this.rightLimitSwitch.get() && this.rackAndPinion.get() == 0)
-            this.rackAndPinion.set(0.5);
+            this.rackAndPinion.set(0.85);
     }
 
     public void moveRandPLeft() {
         if (!this.leftLimitSwitch.get())  // consider switching to while
             this.rackAndPinion.set(0); // may need to reverse
         else if (this.leftLimitSwitch.get() && this.rackAndPinion.get() == 0)
-            this.rackAndPinion.set(-0.5);
+            this.rackAndPinion.set(-0.85);
     }
 
     public void stopRandP() {
