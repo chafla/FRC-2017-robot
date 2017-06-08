@@ -6,6 +6,7 @@ import com.ctre.CANTalon.TalonControlMode;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.athenian.BaseMqttCallback;
 import org.athenian.Utils;
 import org.eclipse.paho.client.mqttv3.*;
@@ -15,6 +16,7 @@ import org.usfirst.frc.team852.robot.data.DataType;
 import org.usfirst.frc.team852.robot.data.HeadingData;
 import org.usfirst.frc.team852.robot.data.LidarData;
 import org.usfirst.frc.team852.robot.strategy.JvStrategy;
+import org.usfirst.frc.team852.robot.strategy.JvStrategyPID;
 import org.usfirst.frc.team852.robot.strategy.Strategy;
 
 import java.util.concurrent.ExecutorService;
@@ -92,7 +94,8 @@ public class Robot extends SampleRobot {
     private final ExecutorService logExecutor = Executors.newFixedThreadPool(4);
     private final ExecutorService mqttExecutor = Executors.newFixedThreadPool(1);
     private final AtomicReference<MqttClient> mqttClientRef = new AtomicReference<>(null);
-    private final Strategy strategy = new JvStrategy(this);
+    private final Strategy strategy = new JvStrategyPID(this);
+    private final SmartDashboard smartDashboard = new SmartDashboard();
 
     private final RobotDrive robotDrive;
 
@@ -390,6 +393,8 @@ public class Robot extends SampleRobot {
 
             // These are set once per iteration of the loop
 
+            // Note that all of the driving commands need to be added ***below*** in the stick stuff
+
             this.strategy.iterationInit();
 
             if (this.xbox.getRawButton(XBOX_A))
@@ -419,6 +424,11 @@ public class Robot extends SampleRobot {
                 this.strategy.onXboxLS();
             else if (this.xbox.getRawButton(XBOX_RS))
                 this.strategy.onXboxRS();
+            /*
+            else {
+                this.strategy.reset();  // FIXME THIS WILL LIKELY BREAK THINGS
+            }
+            */
 
             if (this.xbox.getRawAxis(3) > 0.05)
                 controlledClimb(this.xbox.getRawAxis(3));
@@ -447,7 +457,7 @@ public class Robot extends SampleRobot {
             // that is why joysticks do it that way.)
 
             // Velocity drive needs a larger deadzone, and we can't extend Joystick.
-            if (!this.xbox.getRawButton(XBOX_A) && !this.xbox.getRawButton(XBOX_X) && !this.xbox.getRawButton(XBOX_Back) && !this.xbox.getRawButton((XBOX_Start))) {
+            if (!this.xbox.getRawButton(XBOX_A) && !this.xbox.getRawButton(XBOX_X) && !this.xbox.getRawButton(XBOX_Back) && !this.xbox.getRawButton((XBOX_Start)) && !this.xbox.getRawButton(XBOX_Y)) {
                 if (this.stick1.getZ() < -0.5)
                     this.robotDrive.mecanumDrive_Cartesian(this.adjustDeadzone(this.stick1.getX()),
                                                            -this.adjustDeadzone(this.stick1.getY()),
